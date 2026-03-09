@@ -439,21 +439,6 @@ header {
   font-weight: 500;
 }
 
-/* ─── Keyboard Hints ───────────────────────────────────────────── */
-
-.keyboard-hints {
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.75rem;
-  opacity: 0.7;
-  margin-top: -10px;
-}
-
-.keyboard-hints small {
-  font-family: monospace;
-  letter-spacing: 0.5px;
-}
-
 /* ─── Stats ────────────────────────────────────────────────────── */
 
 .stats {
@@ -545,10 +530,6 @@ header {
   .source-btn {
     padding: 10px 12px;
     font-size: 0.75rem;
-  }
-  
-  .keyboard-hints {
-    display: none;
   }
   
   .btn-secondary {
