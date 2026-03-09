@@ -36,6 +36,8 @@ const elements = {
   btnShare: document.getElementById('btn-share'),
   btnTheme: document.getElementById('btn-theme'),
   btnInstall: document.getElementById('btn-install'),
+  btnDetails: document.getElementById('btn-details'),
+  creditsPanel: document.getElementById('credits-panel'),
   categoryBtns: document.querySelectorAll('.source-btn'),
   stats: document.getElementById('stats'),
   toast: document.getElementById('toast'),
@@ -334,13 +336,29 @@ function toggleTheme() {
   applyTheme();
 }
 
+// ─── Details Panel Toggle ───────────────────────────────────────
+
+function toggleDetails() {
+  const panel = elements.creditsPanel;
+  const btn = elements.btnDetails;
+  const isHidden = panel.hasAttribute('hidden');
+  
+  if (isHidden) {
+    panel.removeAttribute('hidden');
+    btn.setAttribute('aria-expanded', 'true');
+  } else {
+    panel.setAttribute('hidden', '');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
 // ─── Online/Offline Handling ────────────────────────────────────
 
 function updateOnlineStatus() {
   const isOnline = navigator.onLine;
   document.body.classList.toggle('offline', !isOnline);
   if (elements.offlineIndicator) {
-    elements.offlineIndicator.style.display = isOnline ? 'none' : 'block';
+    elements.offlineIndicator.style.display = isOnline ? 'none' : 'flex';
   }
   updateStats();
 }
@@ -419,6 +437,7 @@ function init() {
   if (elements.btnCopy) elements.btnCopy.addEventListener('click', copyToClipboard);
   if (elements.btnShare) elements.btnShare.addEventListener('click', shareQuote);
   if (elements.btnInstall) elements.btnInstall.addEventListener('click', installApp);
+  if (elements.btnDetails) elements.btnDetails.addEventListener('click', toggleDetails);
 
   if (elements.categoryBtns) {
     elements.categoryBtns.forEach(btn => {
