@@ -52,7 +52,7 @@
     </div>
   </header>
 
-  <main class="quote-container">
+  <main class="view active">
     <div class="quote-card" id="quote-card">
       <div class="loading-spinner" id="loader">
         <div class="spinner"></div>
@@ -83,7 +83,7 @@
     </div>
 
     <div class="source-controls">
-      <div class="source-label">Collection:</div>
+      <div class="source-label">Collection</div>
       <div class="source-buttons">
         <button class="source-btn active" data-category="all">All</button>
         <button class="source-btn" data-category="dhammapada">Dhammapada</button>
@@ -96,42 +96,24 @@
   </main>
 
   <footer class="footer">
-    <div class="footer-main">
+    <div class="container">
       <div class="footer-row">
         <p>&copy; 2026 Silent Words v0.3.0</p>
       </div>
-      
-      <div class="footer-row footer-links">
-        <a href="https://github.com/janekslezak/SilentWords" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/janekslezak/SilentWords/blob/main/README.md" target="_blank" rel="noopener">Readme</a>
-                <a href="https://github.com/janekslezak/SilentWords/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a>
+      <div class="footer-row">
+        <p>
+          <a href="https://github.com/janekslezak/SilentWords" target="_blank" rel="noopener">GitHub</a>
+          -
+          <a href="https://github.com/janekslezak/SilentWords/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a>
+          -
+          <a href="https://github.com/janekslezak/SilentWords/blob/main/README.md" target="_blank" rel="noopener">Readme</a>
+        </p>
       </div>
-
-      <div class="footer-row footer-secondary">
-        <p>This site is powered by <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify</a><br>
-          <a href="https://jwaseon.netlify.app/" target="_blank" rel="noopener">Silent Bell</a></p>
-                <button id="btn-details" class="btn-details" aria-expanded="false" aria-controls="credits-panel">
-          Credits
-        </button>
+      <div class="footer-row">
+        <p>Hosted on <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify</a></p>
       </div>
-    </div>
-
-    <div id="credits-panel" class="credits-panel" hidden>
-      <div class="credits-content">
-        <div class="credits-item">
-          <strong>Dhammapada</strong>
-          <p>Translation by F. Max Müller (1881). Sourced from <a href="https://www.gutenberg.org/ebooks/2017" target="_blank" rel="noopener">Project Gutenberg</a>. Public domain.</p>
-        </div>
-        
-        <div class="credits-item">
-          <strong>Koans</strong>
-          <p><em>Blue Cliff Record</em> by Yuanwu Keqin (1063–1135) from <a href="https://buddhism.org/pages/The-Blue-Cliff-Record" target="_blank" rel="noopener">buddhism.org</a>. <em>Gateless Gate</em> by Wumen Huikai (1228), translation by Senzaki & Reps (1934) from <a href="https://en.wikisource.org/wiki/The_Gateless_Gate" target="_blank" rel="noopener">Wikisource</a>. Both public domain.</p>
-        </div>
-        
-        <div class="credits-item">
-          <strong>Daodejing</strong>
-          <p>Attributed to Laozi (~6th c. BCE). Translation by James Legge (1891). Sourced from <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>. Public domain.</p>
-        </div>
+      <div class="footer-row">
+        <p><a href="https://jwaseon.netlify.app/" target="_blank" rel="noopener">Silent Bell</a></p>
       </div>
     </div>
   </footer>
