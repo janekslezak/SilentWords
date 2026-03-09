@@ -7,23 +7,32 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#111820" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f0ece4" media="(prefers-color-scheme: light)">
-  <title>Silent Words - Buddhist Quotes</title>
+  <meta name="description" content="Contemplative quotes from Dhammapada, Zen Koans, and Daodejing">
+  <title>Silent Words - Buddhist & Taoist Quotes</title>
+  
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(r => console.log('SW registered'))
+          .then(r => console.log('SW registered:', r.scope))
           .catch(e => console.error('SW failed:', e));
       });
     }
   </script>
 </head>
 <body>
+  <div id="offline-indicator" class="offline-indicator" style="display: none;" role="status">
+    <span class="offline-dot"></span> Offline Mode
+  </div>
+
   <header>
     <div class="header-left">
-      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" class="header-icon">
+      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" class="header-icon" aria-hidden="true">
         <path d="M 50,60 C 44,45 44,28 50,18 C 56,28 56,45 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
         <path d="M 50,60 C 38,50 32,34 36,22 C 44,30 48,46 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
         <path d="M 50,60 C 62,50 68,34 64,22 C 56,30 52,46 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
@@ -36,6 +45,9 @@
       <span class="header-title">Silent Words</span>
     </div>
     <div class="header-controls">
+      <button id="btn-install" class="btn-install" style="display: none;" aria-label="Install app">
+        <span>Install</span>
+      </button>
       <button id="btn-theme" aria-label="Toggle theme">🌙</button>
     </div>
   </header>
@@ -47,8 +59,8 @@
         <span>Loading...</span>
       </div>
 
-      <div class="quote-content" id="quote-content" style="display: none;">
-        <div class="quote-text" id="quote-text"></div>
+      <div class="quote-content" id="quote-content" style="display: none;" aria-live="polite" aria-atomic="true">
+        <div class="quote-text" id="quote-text" aria-busy="false"></div>
         <div class="quote-meta">
           <span class="quote-author" id="quote-author">—</span>
           <span class="quote-source" id="quote-source"></span>
@@ -58,11 +70,14 @@
     </div>
 
     <div class="controls">
-      <button id="btn-pull" class="btn-primary">
+      <button id="btn-pull" class="btn-primary" title="Space or Enter">
         <span class="btn-text">New Quote</span>
         <span class="btn-icon">⟳</span>
       </button>
-      <button id="btn-copy" class="btn-secondary" aria-label="Copy quote" title="Copy to clipboard">
+      <button id="btn-share" class="btn-secondary" aria-label="Share quote" title="Share (S)">
+        <span class="btn-icon">↗</span>
+      </button>
+      <button id="btn-copy" class="btn-secondary" aria-label="Copy quote" title="Copy (C)">
         <span class="btn-icon">📋</span>
       </button>
     </div>
@@ -70,11 +85,15 @@
     <div class="source-controls">
       <div class="source-label">Collection:</div>
       <div class="source-buttons">
-        <button class="source-btn active" data-category="all">All</button>
-        <button class="source-btn" data-category="dhammapada">Dhammapada</button>
-        <button class="source-btn" data-category="koans">Koans</button>
-        <button class="source-btn" data-category="tao">Dao</button>
+        <button class="source-btn active" data-category="all" title="1">All</button>
+        <button class="source-btn" data-category="dhammapada" title="2">Dhammapada</button>
+        <button class="source-btn" data-category="koans" title="3">Koans</button>
+        <button class="source-btn" data-category="tao" title="4">Dao</button>
       </div>
+    </div>
+
+    <div class="keyboard-hints">
+      <small>Space: New • C: Copy • S: Share • T: Theme • 1-4: Collections</small>
     </div>
 
     <div class="stats" id="stats">Loading databases...</div>
@@ -98,19 +117,18 @@
           Both public domain.
         </p>
       </div>
-<div class="footer-row">
-  <p>
-    <strong>Daodejing</strong> — Laozi (~6th c. BCE), trans. James Legge (1891),
-    <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>.
-    Public domain.
-  </p>
-</div>
-
       <div class="footer-row">
-      <br></div>
+        <p>
+          <strong>Daodejing</strong> — Laozi (~6th c. BCE), trans. James Legge (1891),
+          <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>.
+          Public domain.
+        </p>
+      </div>
+      <div class="footer-row">
+        <br>
         <p>&copy; 2026 Silent Words v0.3.0</p>
       </div>
- <div class="footer-row">
+      <div class="footer-row">
         <p>
           <a href="https://github.com/janekslezak/SilentWords" target="_blank" rel="noopener">GitHub</a>
           -
@@ -122,7 +140,7 @@
       <div class="footer-row">
         <p>This site is powered by <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify</a>.</p>
       </div>
-       <div class="footer-row"><br>
+      <div class="footer-row"><br>
         <p><a href="https://jwaseon.netlify.app/" target="_blank" rel="noopener">Silent Bell</a></p>
       </div>
     </div>
