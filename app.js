@@ -19,7 +19,9 @@ const state = {
   loaded: false,
   currentCategory: 'all',
   currentQuote: null,
-  theme: localStorage.getItem('theme') || 'dark'
+  theme: localStorage.getItem('theme') || 'dark',
+  deferredPrompt: null,
+  db: null
 };
 
 const elements = {
@@ -31,41 +33,104 @@ const elements = {
   loader: document.getElementById('loader'),
   btnPull: document.getElementById('btn-pull'),
   btnCopy: document.getElementById('btn-copy'),
+  btnShare: document.getElementById('btn-share'),
   btnTheme: document.getElementById('btn-theme'),
+  btnInstall: document.getElementById('btn-install'),
   categoryBtns: document.querySelectorAll('.source-btn'),
   stats: document.getElementById('stats'),
-  toast: document.getElementById('toast')
+  toast: document.getElementById('toast'),
+  offlineIndicator: document.getElementById('offline-indicator')
 };
+
+// ─── IndexedDB Setup ────────────────────────────────────────────
+
+const DB_NAME = 'SilentWordsDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'quotes';
+
+function initIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      state.db = request.result;
+      resolve(state.db);
+    };
+    
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+  });
+}
+
+async function cacheQuotes(type, data) {
+  if (!state.db) return;
+  const tx = state.db.transaction(STORE_NAME, 'readwrite');
+  const store = tx.objectStore(STORE_NAME);
+  await store.put(data, type);
+}
+
+async function getCachedQuotes(type) {
+  if (!state.db) return null;
+  return new Promise((resolve) => {
+    const tx = state.db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(type);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(null);
+  });
+}
 
 // ─── Database Loading ───────────────────────────────────────────
 
 async function loadDatabase(type) {
   try {
+    // Try cache first for instant display
+    const cached = await getCachedQuotes(type);
+    if (cached && Array.isArray(cached)) {
+      state.databases[type] = cached;
+      console.log(`Loaded ${cached.length} ${type} from cache`);
+      if (!state.loaded) updateDisplayAfterLoad();
+    }
+
+    // Fetch fresh data
     const response = await fetch(`${CONFIG.dataPath}${CONFIG.files[type]}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const data = await response.json();
     if (!Array.isArray(data)) throw new Error('Invalid format');
 
-    state.databases[type] = data;
-    console.log(`Loaded ${data.length} ${type}`);
+    // Validate data integrity
+    const validData = data.filter(validateQuote);
+    if (validData.length !== data.length) {
+      console.warn(`Filtered ${data.length - validData.length} invalid quotes from ${type}`);
+    }
+
+    state.databases[type] = validData;
+    await cacheQuotes(type, validData);
+    console.log(`Loaded ${validData.length} ${type} from network`);
     return true;
   } catch (error) {
     console.error(`Failed to load ${type}:`, error);
-    state.databases[type] = [];
+    if (!state.databases[type].length) {
+      state.databases[type] = [];
+    }
     return false;
   }
 }
 
-async function initDatabases() {
-  elements.btnPull.disabled = true;
+function validateQuote(quote) {
+  return quote && 
+         typeof quote.text === 'string' && 
+         quote.text.length > 0 &&
+         typeof quote.source === 'string';
+}
 
-  await Promise.all([
-    loadDatabase('dhammapada'),
-    loadDatabase('koans'),
-    loadDatabase('tao')
-  ]);
-
+function updateDisplayAfterLoad() {
   const totalLoaded = state.databases.dhammapada.length +
                       state.databases.koans.length +
                       state.databases.tao.length;
@@ -82,6 +147,19 @@ async function initDatabases() {
 
   updateStats();
   displayQuote();
+}
+
+async function initDatabases() {
+  await initIndexedDB();
+  elements.btnPull.disabled = true;
+
+  await Promise.all([
+    loadDatabase('dhammapada'),
+    loadDatabase('koans'),
+    loadDatabase('tao')
+  ]);
+
+  updateDisplayAfterLoad();
 }
 
 // ─── Quote Logic ────────────────────────────────────────────────
@@ -103,9 +181,11 @@ function getRandomQuote() {
   if (pool.length === 1) return pool[0];
 
   let quote;
+  let attempts = 0;
   do {
     quote = pool[Math.floor(Math.random() * pool.length)];
-  } while (state.currentQuote && quote.text === state.currentQuote.text);
+    attempts++;
+  } while (state.currentQuote && quote.text === state.currentQuote.text && attempts < 10);
 
   return quote;
 }
@@ -118,6 +198,7 @@ function displayQuote() {
 
   state.currentQuote = quote;
 
+  elements.quoteText.setAttribute('aria-busy', 'true');
   elements.quoteText.style.opacity = '0';
   elements.quoteAuthor.style.opacity = '0';
 
@@ -125,7 +206,6 @@ function displayQuote() {
     elements.quoteText.textContent = quote.text;
     elements.quoteAuthor.textContent = quote.author ? `— ${quote.author}` : '— Laozi';
 
-    // Source line: show chapter for Tao, source for others
     if (quote.chapter) {
       elements.quoteSource.textContent = `${quote.source}, ch. ${quote.chapter}`;
     } else {
@@ -136,6 +216,7 @@ function displayQuote() {
 
     elements.quoteText.style.opacity = '1';
     elements.quoteAuthor.style.opacity = '1';
+    elements.quoteText.setAttribute('aria-busy', 'false');
   }, 150);
 }
 
@@ -146,12 +227,14 @@ function updateStats() {
   const k = state.databases.koans.length;
   const t = state.databases.tao.length;
   const total = d + k + t;
+  const isOffline = !navigator.onLine;
+  const statusPrefix = isOffline ? 'Offline • ' : '';
 
   const labels = {
-    all: `${total} quotes • ${d} Dhammapada • ${k} Koans • ${t} Daodejing`,
-    dhammapada: `${d} quotes — Dhammapada`,
-    koans: `${k} quotes — Koans`,
-    tao: `${t} quotes — Daodejing`
+    all: `${statusPrefix}${total} quotes • ${d} Dhammapada • ${k} Koans • ${t} Daodejing`,
+    dhammapada: `${statusPrefix}${d} quotes — Dhammapada`,
+    koans: `${statusPrefix}${k} quotes — Koans`,
+    tao: `${statusPrefix}${t} quotes — Daodejing`
   };
 
   elements.stats.textContent = labels[state.currentCategory] || '';
@@ -179,15 +262,50 @@ function copyToClipboard() {
   const text = `"${q.text}" — ${author}${src ? ` (${src})` : ''}`;
 
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('Copied to clipboard'))
+      .catch(() => fallbackCopy(text));
   } else {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(ta);
+  ta.select();
+  try {
     document.execCommand('copy');
-    document.body.removeChild(ta);
     showToast('Copied to clipboard');
+  } catch (err) {
+    showToast('Failed to copy');
+  }
+  document.body.removeChild(ta);
+}
+
+async function shareQuote() {
+  if (!state.currentQuote) return;
+  
+  const q = state.currentQuote;
+  const author = q.author || 'Laozi';
+  const text = `"${q.text}" — ${author}`;
+  
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Silent Words',
+        text: text,
+        url: window.location.href
+      });
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        copyToClipboard();
+      }
+    }
+  } else {
+    copyToClipboard();
   }
 }
 
@@ -203,6 +321,11 @@ function applyTheme() {
   if (elements.btnTheme) {
     elements.btnTheme.textContent = state.theme === 'dark' ? '🌙' : '☀️';
   }
+  if (elements.btnTheme) {
+    elements.btnTheme.setAttribute('aria-label', 
+      state.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+    );
+  }
 }
 
 function toggleTheme() {
@@ -211,14 +334,91 @@ function toggleTheme() {
   applyTheme();
 }
 
+// ─── Online/Offline Handling ────────────────────────────────────
+
+function updateOnlineStatus() {
+  const isOnline = navigator.onLine;
+  document.body.classList.toggle('offline', !isOnline);
+  if (elements.offlineIndicator) {
+    elements.offlineIndicator.style.display = isOnline ? 'none' : 'block';
+  }
+  updateStats();
+}
+
+// ─── Install Prompt ─────────────────────────────────────────────
+
+function handleInstallPrompt(e) {
+  e.preventDefault();
+  state.deferredPrompt = e;
+  if (elements.btnInstall) {
+    elements.btnInstall.style.display = 'flex';
+  }
+}
+
+async function installApp() {
+  if (!state.deferredPrompt) return;
+  
+  state.deferredPrompt.prompt();
+  const { outcome } = await state.deferredPrompt.userChoice;
+  
+  if (outcome === 'accepted') {
+    showToast('App installed');
+    if (elements.btnInstall) {
+      elements.btnInstall.style.display = 'none';
+    }
+  }
+  state.deferredPrompt = null;
+}
+
+// ─── Keyboard Shortcuts ─────────────────────────────────────────
+
+function handleKeyboard(e) {
+  if (e.target.matches('input, textarea')) return;
+  
+  const key = e.key.toLowerCase();
+  
+  switch(key) {
+    case ' ':
+    case 'enter':
+      e.preventDefault();
+      displayQuote();
+      break;
+    case 'c':
+      copyToClipboard();
+      break;
+    case 's':
+      shareQuote();
+      break;
+    case 't':
+      toggleTheme();
+      break;
+    case '1':
+      setCategory('all');
+      break;
+    case '2':
+      setCategory('dhammapada');
+      break;
+    case '3':
+      setCategory('koans');
+      break;
+    case '4':
+      setCategory('tao');
+      break;
+  }
+}
+
 // ─── Initialization ─────────────────────────────────────────────
 
 function init() {
   applyTheme();
+  updateOnlineStatus();
 
+  // Event listeners
   if (elements.btnTheme) elements.btnTheme.addEventListener('click', toggleTheme);
   if (elements.btnPull) elements.btnPull.addEventListener('click', displayQuote);
   if (elements.btnCopy) elements.btnCopy.addEventListener('click', copyToClipboard);
+  if (elements.btnShare) elements.btnShare.addEventListener('click', shareQuote);
+  if (elements.btnInstall) elements.btnInstall.addEventListener('click', installApp);
 
   if (elements.categoryBtns) {
     elements.categoryBtns.forEach(btn => {
@@ -226,12 +426,10 @@ function init() {
     });
   }
 
-  document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && !e.target.matches('button')) {
-      e.preventDefault();
-      displayQuote();
-    }
-  });
+  document.addEventListener('keydown', handleKeyboard);
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  window.addEventListener('beforeinstallprompt', handleInstallPrompt);
 
   initDatabases();
 }
