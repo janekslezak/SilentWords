@@ -454,7 +454,7 @@ header {
 
 .footer {
   margin-top: auto;
-  padding: 20px;
+  padding: 24px 20px;
   text-align: center;
   border-top: 1px solid var(--border);
   font-size: 0.85rem;
@@ -468,8 +468,12 @@ header {
 .footer-main {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
+}
+
+.footer-row {
+  line-height: 1.5;
 }
 
 .footer-links {
@@ -478,6 +482,22 @@ header {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.footer-secondary {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.footer-secondary a {
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+.footer-secondary a:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .footer-links .divider {
@@ -553,7 +573,7 @@ header {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   text-align: left;
   opacity: 0;
   transition: opacity 0.3s ease-out 0.1s;
@@ -657,6 +677,10 @@ header {
 
   .credits-item {
     padding: 10px;
+  }
+
+  .footer {
+    padding: 20px 16px;
   }
 }
 
