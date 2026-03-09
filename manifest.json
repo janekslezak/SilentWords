@@ -2,8 +2,8 @@
   "name": "Silent Words",
   "short_name": "Silent Words",
   "description": "Contemplative quotes from the Dhammapada, Zen Koans, and Daodejing",
-  "start_url": "/SilentWords/",
-  "scope": "/SilentWords/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1c1b19",
@@ -28,21 +28,21 @@
       "name": "Random Dhammapada",
       "short_name": "Dhammapada",
       "description": "Get a random Dhammapada quote",
-      "url": "/SilentWords/?category=dhammapada",
+      "url": "/?category=dhammapada",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Random Koan",
       "short_name": "Koans",
       "description": "Get a random Zen Koan",
-      "url": "/SilentWords/?category=koans",
+      "url": "/?category=koans",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Random Tao",
       "short_name": "Daodejing",
       "description": "Get a random Daodejing verse",
-      "url": "/SilentWords/?category=tao",
+      "url": "/?category=tao",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
