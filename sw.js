@@ -1,4 +1,4 @@
-const CACHE = 'silent-words-v1';
+const CACHE = 'silent-words-v2';
 
 const ASSETS = [
   '/SilentWords/',
@@ -6,8 +6,8 @@ const ASSETS = [
   '/SilentWords/style.css',
   '/SilentWords/app.js',
   '/SilentWords/data/dhammapada.json',
-  '/SilentWords/data/koans.json'
-  '/SilentWords/data/taoteching.json',
+  '/SilentWords/data/koans.json',
+  '/SilentWords/data/taoteching.json'
 ];
 
 self.addEventListener('install', e => {
@@ -27,16 +27,37 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const { request } = e;
+  const url = new URL(request.url);
+  
+  // Network-first for JSON data (fresh quotes preferred, fallback to cache)
+  if (url.pathname.includes('/data/')) {
+    e.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE).then(cache => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+  
+  // Stale-while-revalidate for assets
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      return cached || fetch(e.request).then(response => {
-        // Cache new successful requests dynamically
+    caches.match(request).then(cached => {
+      const fetchPromise = fetch(request).then(response => {
         if (response.ok) {
           const clone = response.clone();
-          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+          caches.open(CACHE).then(cache => cache.put(request, clone));
         }
         return response;
-      });
-    }).catch(() => caches.match('/SilentWords/'))
+      }).catch(() => cached);
+      
+      return cached || fetchPromise;
+    })
   );
 });
