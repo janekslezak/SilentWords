@@ -64,6 +64,50 @@ body {
     url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
 }
 
+/* ─── Offline Indicator ───────────────────────────────────────── */
+
+.offline-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--accent);
+  color: var(--bg);
+  text-align: center;
+  padding: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transform: translateY(-100%);
+  animation: slideDown 0.3s forwards;
+}
+
+@keyframes slideDown {
+  to { transform: translateY(0); }
+}
+
+.offline-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+body.offline .quote-card {
+  border-left: 3px solid var(--accent);
+}
+
 /* ─── Header ───────────────────────────────────────────────────── */
 
 header {
@@ -111,7 +155,7 @@ header {
   gap: 8px;
 }
 
-#btn-theme {
+#btn-theme, .btn-install {
   padding: 6px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -123,6 +167,18 @@ header {
   -webkit-tap-highlight-color: transparent;
   transition: all 0.2s ease;
   font-family: inherit;
+}
+
+.btn-install {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+  border-color: var(--accent);
+}
+
+.btn-install:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 [data-theme="light"] #btn-theme {
@@ -157,7 +213,7 @@ header {
   justify-content: center;
   position: relative;
   box-shadow: var(--shadow);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-left-width 0.3s;
 }
 
 [data-theme="light"] .quote-card {
@@ -316,6 +372,10 @@ header {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
 }
 
 [data-theme="light"] .btn-secondary {
@@ -327,6 +387,7 @@ header {
   border-color: var(--accent);
   color: var(--accent);
   background: rgba(196, 167, 125, 0.08);
+  transform: translateY(-1px);
 }
 
 /* ─── Source Controls ──────────────────────────────────────────── */
@@ -378,6 +439,21 @@ header {
   font-weight: 500;
 }
 
+/* ─── Keyboard Hints ───────────────────────────────────────────── */
+
+.keyboard-hints {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: -10px;
+}
+
+.keyboard-hints small {
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
 /* ─── Stats ────────────────────────────────────────────────────── */
 
 .stats {
@@ -402,6 +478,17 @@ header {
 
 [data-theme="light"] .footer {
   border-top-color: rgba(139, 111, 74, 0.12);
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+.footer a:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .toast {
@@ -437,6 +524,7 @@ header {
 @media (max-width: 480px) {
   .quote-container {
     padding: 24px 16px;
+    gap: 20px;
   }
   
   .quote-card {
@@ -458,19 +546,15 @@ header {
     padding: 10px 12px;
     font-size: 0.75rem;
   }
+  
+  .keyboard-hints {
+    display: none;
+  }
+  
+  .btn-secondary {
+    padding: 14px 16px;
+  }
 }
-
-.footer a {
-  color: var(--accent);
-  text-decoration: none;
-  opacity: 0.8;
-}
-
-.footer a:hover {
-  opacity: 1;
-  text-decoration: underline;
-}
-
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -478,5 +562,20 @@ header {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible for accessibility */
+button:focus-visible,
+.source-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #666;
+    --muted: #666;
   }
 }
