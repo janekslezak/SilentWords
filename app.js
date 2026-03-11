@@ -233,10 +233,10 @@ function updateStats() {
   const statusPrefix = isOffline ? 'Offline • ' : '';
 
   const labels = {
-    all: `${statusPrefix}${total} quotes • ${d} Dhammapada • ${k} Koans • ${t} Daodejing`,
+    all: `${statusPrefix}${total} quotes • ${d} Dhammapada • ${k} Koans • ${t} Dao`,
     dhammapada: `${statusPrefix}${d} quotes — Dhammapada`,
     koans: `${statusPrefix}${k} quotes — Koans`,
-    tao: `${statusPrefix}${t} quotes — Daodejing`
+    tao: `${statusPrefix}${t} quotes — Dao`
   };
 
   elements.stats.textContent = labels[state.currentCategory] || '';
