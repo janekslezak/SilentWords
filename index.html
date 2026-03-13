@@ -8,13 +8,14 @@
   <meta name="theme-color" content="#111820" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f0ece4" media="(prefers-color-scheme: light)">
   <meta name="description" content="Contemplative quotes from Dhammapada, Zen Koans, and Daoist classics">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
   <title>Silent Words - Buddhist & Taoist Quotes</title>
-  
+
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  
+
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -26,7 +27,7 @@
   </script>
 </head>
 <body>
-  <div id="offline-indicator" class="offline-indicator" style="display: none;" role="status">
+  <div id="offline-indicator" class="offline-indicator" role="status">
     <span class="offline-dot"></span> Offline Mode
   </div>
 
@@ -98,7 +99,7 @@
   <footer class="footer">
     <div class="container">
       <div class="footer-row">
-        <p>&copy; 2026 Silent Words v0.3.0</p>
+        <p>&copy; 2026 Silent Words v0.4.0</p>
       </div>
       <div class="footer-row">
         <p>
@@ -125,16 +126,16 @@
           <strong>Dhammapada</strong>
           <p>Translation by F. Max Müller (1881). Sourced from <a href="https://www.gutenberg.org/ebooks/2017" target="_blank" rel="noopener">Project Gutenberg #2017</a>. Public domain.</p>
         </div>
-        
+
         <div class="credits-item">
           <strong>Koans</strong>
           <p><em>Blue Cliff Record</em> by Yuanwu Keqin (1063–1135). Sourced from <a href="https://buddhism.org/pages/The-Blue-Cliff-Record" target="_blank" rel="noopener">buddhism.org</a>. <br>
             <em>Gateless Gate</em> by Wumen Huikai (1228), translation by Senzaki & Reps (1934) from <a href="https://en.wikisource.org/wiki/The_Gateless_Gate" target="_blank" rel="noopener">Wikisource</a>. Both public domain.</p>
         </div>
-        
+
         <div class="credits-item">
           <strong>Dao</strong>
-          <p><em></em>Daodejing</em> Attributed to Laozi (~6th c. BCE). Translation by James Legge (1891). Sourced from <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>.<br>
+          <p><em>Daodejing</em> Attributed to Laozi (~6th c. BCE). Translation by James Legge (1891). Sourced from <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>.<br>
           <em>Zhuangzi</em> Attributed to Zhuang Zhou (~4th c. BCE). Translation by Herbert Giles (1889). Sourced from <a href="https://www.gutenberg.org/ebooks/59709" target="_blank" rel="noopener">Project Gutenberg #59709</a>. Both public domain.</p>
         </div>
       </div>
@@ -143,6 +144,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite">Copied to clipboard</div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
