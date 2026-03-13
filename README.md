@@ -9,15 +9,6 @@ A Progressive Web App (PWA) for contemplative quotes from the Dhammapada, Zen Ko
 - Keyboard shortcuts
 - Installable as a PWA
 
-## Setup
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/janekslezak/SilentWords.git
-   cd SilentWords
-   ```
-2. Serve the files using a local server (e.g., `python -m http.server` or `live-server`).
-3. Open `index.html` in your browser.
-
 ## Architecture
 - **constants.js**: Shared constants and configuration.
 - **db.js**: IndexedDB setup and caching logic.
@@ -32,4 +23,6 @@ A Progressive Web App (PWA) for contemplative quotes from the Dhammapada, Zen Ko
 - Update `constants.js` to include new files.
 
 ## License
-Public domain. See [LICENSE](LICENSE) for details.
+Public domain. See MIT [LICENSE](LICENSE) for details.
+
+https://giyeon.netlify.app/
