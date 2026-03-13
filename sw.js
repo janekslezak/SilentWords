@@ -1,10 +1,15 @@
-const CACHE = 'silent-words-v2';
+// ─── Service Worker ────────────────────────────────────────────────────────────
+const CACHE = 'silent-words-v3';
 
 const ASSETS = [
   '/SilentWords/',
   '/SilentWords/index.html',
   '/SilentWords/style.css',
   '/SilentWords/app.js',
+  '/SilentWords/constants.js',
+  '/SilentWords/db.js',
+  '/SilentWords/quotes.js',
+  '/SilentWords/utils.js',
   '/SilentWords/data/dhammapada.json',
   '/SilentWords/data/koans.json',
   '/SilentWords/data/taoteching.json'
@@ -29,8 +34,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const { request } = e;
   const url = new URL(request.url);
-  
-  // Network-first for JSON data (fresh quotes preferred, fallback to cache)
+
   if (url.pathname.includes('/data/')) {
     e.respondWith(
       fetch(request)
@@ -45,8 +49,7 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  
-  // Stale-while-revalidate for assets
+
   e.respondWith(
     caches.match(request).then(cached => {
       const fetchPromise = fetch(request).then(response => {
@@ -56,8 +59,8 @@ self.addEventListener('fetch', e => {
         }
         return response;
       }).catch(() => cached);
-      
+
       return cached || fetchPromise;
     })
   );
-});
+}
