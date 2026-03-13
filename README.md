@@ -1,11 +1,35 @@
 # SilentWords
-Buddhist quotes PWA
 
+A Progressive Web App (PWA) for contemplative quotes from the Dhammapada, Zen Koans, and Daoist classics.
 
+## Features
+- Offline-first design with IndexedDB and Service Worker
+- Dark/light theme toggle
+- Copy and share quotes
+- Keyboard shortcuts
+- Installable as a PWA
 
+## Setup
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/janekslezak/SilentWords.git
+   cd SilentWords
+   ```
+2. Serve the files using a local server (e.g., `python -m http.server` or `live-server`).
+3. Open `index.html` in your browser.
 
-Dhammapada — trans. F. Max Müller (1881), Project Gutenberg. Public domain.
+## Architecture
+- **constants.js**: Shared constants and configuration.
+- **db.js**: IndexedDB setup and caching logic.
+- **quotes.js**: Quote management and state.
+- **utils.js**: Helper functions.
+- **app.js**: Main application logic.
+- **sw.js**: Service Worker for offline support.
 
-Koans — Blue Cliff Record (Yuanwu Keqin, 1063–1135), buddhism.org. Gateless Gate (Wumen Huikai, 1228), trans. Senzaki & Reps (1934), Wikisource. Both public domain.
+## Development
+- Use ES6 modules for modularity.
+- Add new quote databases to the `/data` folder.
+- Update `constants.js` to include new files.
 
-Daodejing — Laozi (~6th c. BCE), trans. James Legge (1891), Project Gutenberg #216. Public domain.
+## License
+Public domain. See [LICENSE](LICENSE) for details.
