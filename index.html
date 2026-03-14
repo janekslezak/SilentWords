@@ -2,108 +2,138 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#1a1a1a">
-  <meta name="description" content="Silent Words - Buddhist & Taoist Quotes">
-  
-  <title>Silent Words</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#111820" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f0ece4" media="(prefers-color-scheme: light)">
+  <title>Silent Words - Buddhist Quotes</title>
+  <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-  <link rel="stylesheet" href="css/style.css">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(r => console.log('SW registered'))
+          .catch(e => console.error('SW failed:', e));
+      });
+    }
+  </script>
 </head>
 <body>
-  <div id="app">
-    <!-- Loading Screen -->
-    <div id="loading" class="screen loading-screen">
-      <div class="loading-content">
+  <header>
+    <div class="header-left">
+      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" class="header-icon">
+        <path d="M 50,60 C 44,45 44,28 50,18 C 56,28 56,45 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M 50,60 C 38,50 32,34 36,22 C 44,30 48,46 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M 50,60 C 62,50 68,34 64,22 C 56,30 52,46 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M 50,60 C 34,54 22,40 24,26 C 34,32 44,48 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M 50,60 C 66,54 78,40 76,26 C 66,32 56,48 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M 50,60 C 30,58 14,46 14,32 C 26,36 40,52 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M 50,60 C 70,58 86,46 86,32 C 74,36 60,52 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M 20,63 Q 50,70 80,63" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <span class="header-title">Silent Words</span>
+    </div>
+    <div class="header-controls">
+      <!-- LANGUAGE SWITCH ADDED HERE -->
+      <button id="btn-lang" class="lang-toggle" aria-label="Toggle language">
+        <span class="lang-code">EN</span>
+      </button>
+      <button id="btn-theme" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main class="quote-container">
+    <div class="quote-card" id="quote-card">
+      <div class="loading-spinner" id="loader">
         <div class="spinner"></div>
-        <p data-i18n="loading">Loading databases...</p>
+        <span data-i18n="loading">Loading...</span>
+      </div>
+
+      <div class="quote-content" id="quote-content" style="display: none;">
+        <div class="quote-text" id="quote-text"></div>
+        <div class="quote-meta">
+          <span class="quote-author" id="quote-author">—</span>
+          <span class="quote-source" id="quote-source"></span>
+          <span class="quote-tradition" id="quote-tradition"></span>
+        </div>
       </div>
     </div>
 
-    <!-- Main App Screen -->
-    <div id="main" class="screen main-screen hidden">
-      <header class="app-header">
-        <div class="header-brand">
-          <span class="brand-icon">🔔</span>
-          <h1 class="brand-title">Silent Words</h1>
-        </div>
-        
-        <div class="header-controls">
-          <!-- LANGUAGE TOGGLE ADDED HERE -->
-          <button id="lang-toggle" class="control-btn lang-toggle" aria-label="Toggle language">
-            <span class="lang-code">EN</span>
-          </button>
-          
-          <button id="theme-toggle" class="control-btn theme-toggle" aria-label="Toggle theme">
-            <span class="theme-icon sun">☀️</span>
-            <span class="theme-icon moon">🌙</span>
-          </button>
-        </div>
-      </header>
-
-      <main class="quote-container">
-        <div class="quote-card">
-          <div class="quote-text-wrapper">
-            <p id="quote-text" class="quote-text">Loading...</p>
-          </div>
-          <div class="quote-meta">
-            <span id="quote-source" class="quote-source"></span>
-            <span id="quote-chapter" class="quote-chapter"></span>
-          </div>
-        </div>
-
-        <nav class="quote-nav">
-          <button id="prev-btn" class="nav-btn" aria-label="Previous quote">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          
-          <button id="random-btn" class="nav-btn nav-btn-primary" aria-label="Random quote">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-              <path d="M16 8h.01M8 8h.01M8 16h.01M16 16h.01M12 12h.01"></path>
-            </svg>
-          </button>
-          
-          <button id="next-btn" class="nav-btn" aria-label="Next quote">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-        </nav>
-
-        <div class="action-bar">
-          <button id="copy-btn" class="action-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            <span data-i18n="copy">Copy</span>
-          </button>
-          
-          <button id="share-btn" class="action-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="18" cy="5" r="3"></circle>
-              <circle cx="6" cy="12" r="3"></circle>
-              <circle cx="18" cy="19" r="3"></circle>
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-            </svg>
-            <span data-i18n="share">Share</span>
-          </button>
-        </div>
-      </main>
+    <div class="controls">
+      <button id="btn-pull" class="btn-primary">
+        <span class="btn-text" data-i18n="newQuote">New Quote</span>
+        <span class="btn-icon">⟳</span>
+      </button>
+      <button id="btn-copy" class="btn-secondary" aria-label="Copy quote" title="Copy to clipboard">
+        <span class="btn-icon">📋</span>
+      </button>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-      <span id="toast-message"></span>
+    <div class="source-controls">
+      <div class="source-label" data-i18n="collection">Collection:</div>
+      <div class="source-buttons">
+        <button class="source-btn active" data-category="all" data-i18n="all">All</button>
+        <button class="source-btn" data-category="dhammapada">Dhammapada</button>
+        <button class="source-btn" data-category="koans" data-i18n="koans">Koans</button>
+        <button class="source-btn" data-category="tao">Dao</button>
+      </div>
     </div>
-  </div>
 
-  <script type="module" src="js/app.js"></script>
+    <div class="stats" id="stats">Loading databases...</div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-row">
+        <p>
+          <strong>Dhammapada</strong> — trans. F. Max Müller (1881),
+          <a href="https://www.gutenberg.org/ebooks/2017" target="_blank" rel="noopener">Project Gutenberg</a>.
+          Public domain.
+        </p>
+      </div>
+      <div class="footer-row">
+        <p>
+          <strong>Koans</strong> — Blue Cliff Record (Yuanwu Keqin, 1063–1135),
+          <a href="https://buddhism.org/pages/The-Blue-Cliff-Record" target="_blank" rel="noopener">buddhism.org</a>.
+          Gateless Gate (Wumen Huikai, 1228), trans. Senzaki &amp; Reps (1934),
+          <a href="https://en.wikisource.org/wiki/The_Gateless_Gate" target="_blank" rel="noopener">Wikisource</a>.
+          Both public domain.
+        </p>
+      </div>
+      <div class="footer-row">
+        <p>
+          <strong>Daodejing</strong> — Laozi (~6th c. BCE), trans. James Legge (1891),
+          <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>.
+          Public domain.
+        </p>
+      </div>
+      <div class="footer-row">
+        <br>
+        <p>&copy; 2026 Silent Words v0.4.0</p>
+      </div>
+      <div class="footer-row">
+        <p>
+          <a href="https://github.com/janekslezak/SilentWords" target="_blank" rel="noopener">GitHub</a>
+          -
+          <a href="https://github.com/janekslezak/SilentWords/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a>
+          -
+          <a href="https://github.com/janekslezak/SilentWords/blob/main/README.md" target="_blank" rel="noopener">Readme</a>
+        </p>
+      </div>
+      <div class="footer-row">
+        <p>This site is powered by <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify</a>.</p>
+      </div>
+      <div class="footer-row">
+        <br>
+        <p><a href="https://jwaseon.netlify.app/" target="_blank" rel="noopener">Silent Bell</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Copied to clipboard</div>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
