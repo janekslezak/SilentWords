@@ -1,66 +1,87 @@
-// ─── Service Worker ────────────────────────────────────────────────────────────
-const CACHE = 'silent-words-v3';
-
-const ASSETS = [
-  '/SilentWords/',
-  '/SilentWords/index.html',
-  '/SilentWords/style.css',
-  '/SilentWords/app.js',
-  '/SilentWords/constants.js',
-  '/SilentWords/db.js',
-  '/SilentWords/quotes.js',
-  '/SilentWords/utils.js',
-  '/SilentWords/data/dhammapada.json',
-  '/SilentWords/data/koans.json',
-  '/SilentWords/data/taoteching.json'
+const CACHE_NAME = 'silentwords-v1';
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/css/style.css',
+  '/js/app.js',
+  '/js/i18n.js',
+  '/js/constants.js',
+  '/data/en.json',
+  '/data/pl.json',
+  '/data/dhammapada-en.json',
+  '/data/dhammapada-pl.json',
+  '/data/zen-en.json',
+  '/data/zen-pl.json',
+  '/data/dao-en.json',
+  '/data/dao-pl.json'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+// Install event - cache static assets
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[SW] Caching assets');
+        return cache.addAll(STATIC_ASSETS);
+      })
+      .catch(err => console.error('[SW] Cache failed:', err))
   );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames
+          .filter(name => name !== CACHE_NAME)
+          .map(name => caches.delete(name))
+      );
+    })
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', e => {
-  const { request } = e;
-  const url = new URL(request.url);
+// Fetch event - network first for data, cache first for static
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  
+  if (request.method !== 'GET') return;
 
-  if (url.pathname.includes('/data/')) {
-    e.respondWith(
-      fetch(request)
-        .then(response => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE).then(cache => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
-    return;
+  // Check if it's a data file
+  if (request.url.includes('/data/')) {
+    event.respondWith(networkFirst(request));
+  } else {
+    event.respondWith(cacheFirst(request));
   }
+});
 
-  e.respondWith(
-    caches.match(request).then(cached => {
-      const fetchPromise = fetch(request).then(response => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE).then(cache => cache.put(request, clone));
-        }
-        return response;
-      }).catch(() => cached);
+async function cacheFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  
+  if (cached) return cached;
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch (error) {
+    return new Response('Offline', { status: 503 });
+  }
+}
 
-      return cached || fetchPromise;
-    })
-  );
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) cache.put(request, networkResponse.clone());
+    return networkResponse;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    throw error;
+  }
 }

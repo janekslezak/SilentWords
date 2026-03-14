@@ -7,33 +7,23 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#111820" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f0ece4" media="(prefers-color-scheme: light)">
-  <meta name="description" content="Contemplative quotes from Dhammapada, Zen Koans, and Daoist classics">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
-  <title>Silent Words - Buddhist & Taoist Quotes</title>
-
+  <title>Silent Words - Buddhist Quotes</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(r => console.log('SW registered:', r.scope))
+          .then(r => console.log('SW registered'))
           .catch(e => console.error('SW failed:', e));
       });
     }
   </script>
 </head>
 <body>
-  <div id="offline-indicator" class="offline-indicator" role="status">
-    <span class="offline-dot"></span> Offline Mode
-  </div>
-
   <header>
     <div class="header-left">
-      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" class="header-icon" aria-hidden="true">
+      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" class="header-icon">
         <path d="M 50,60 C 44,45 44,28 50,18 C 56,28 56,45 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
         <path d="M 50,60 C 38,50 32,34 36,22 C 44,30 48,46 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
         <path d="M 50,60 C 62,50 68,34 64,22 C 56,30 52,46 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
@@ -46,22 +36,22 @@
       <span class="header-title">Silent Words</span>
     </div>
     <div class="header-controls">
-      <button id="btn-install" class="btn-install" style="display: none;" aria-label="Install app">
-        <span>Install</span>
+      <button id="btn-lang" class="lang-toggle" aria-label="Toggle language">
+        <span class="lang-code">EN</span>
       </button>
       <button id="btn-theme" aria-label="Toggle theme">🌙</button>
     </div>
   </header>
 
-  <main class="view active">
+  <main class="quote-container">
     <div class="quote-card" id="quote-card">
       <div class="loading-spinner" id="loader">
         <div class="spinner"></div>
-        <span>Loading...</span>
+        <span data-i18n="loading">Loading...</span>
       </div>
 
-      <div class="quote-content" id="quote-content" style="display: none;" aria-live="polite" aria-atomic="true">
-        <div class="quote-text" id="quote-text" aria-busy="false"></div>
+      <div class="quote-content" id="quote-content" style="display: none;">
+        <div class="quote-text" id="quote-text"></div>
         <div class="quote-meta">
           <span class="quote-author" id="quote-author">—</span>
           <span class="quote-source" id="quote-source"></span>
@@ -71,24 +61,21 @@
     </div>
 
     <div class="controls">
-      <button id="btn-pull" class="btn-primary" title="Space or Enter">
-        <span class="btn-text">New Quote</span>
+      <button id="btn-pull" class="btn-primary">
+        <span class="btn-text" data-i18n="newQuote">New Quote</span>
         <span class="btn-icon">⟳</span>
       </button>
-      <button id="btn-share" class="btn-secondary" aria-label="Share quote" title="Share">
-        <span class="btn-icon">↗</span>
-      </button>
-      <button id="btn-copy" class="btn-secondary" aria-label="Copy quote" title="Copy">
+      <button id="btn-copy" class="btn-secondary" aria-label="Copy quote" title="Copy to clipboard">
         <span class="btn-icon">📋</span>
       </button>
     </div>
 
     <div class="source-controls">
-      <div class="source-label">Collection</div>
+      <div class="source-label" data-i18n="collection">Collection:</div>
       <div class="source-buttons">
-        <button class="source-btn active" data-category="all">All</button>
+        <button class="source-btn active" data-category="all" data-i18n="all">All</button>
         <button class="source-btn" data-category="dhammapada">Dhammapada</button>
-        <button class="source-btn" data-category="koans">Koans</button>
+        <button class="source-btn" data-category="koans" data-i18n="koans">Koans</button>
         <button class="source-btn" data-category="tao">Dao</button>
       </div>
     </div>
@@ -98,7 +85,40 @@
 
   <footer class="footer">
     <div class="container">
+      <!-- Credits Link -->
+      <div class="footer-row credits-toggle">
+        <a href="#" id="credits-link">Credits</a>
+      </div>
+      
+      <!-- Credits Content (Hidden by default) -->
+      <div id="credits-content" class="credits-content" style="display: none;">
+        <div class="footer-row">
+          <p>
+            <strong>Dhammapada</strong> — trans. F. Max Müller (1881),
+            <a href="https://www.gutenberg.org/ebooks/2017" target="_blank" rel="noopener">Project Gutenberg</a>.
+            Public domain.
+          </p>
+        </div>
+        <div class="footer-row">
+          <p>
+            <strong>Koans</strong> — Blue Cliff Record (Yuanwu Keqin, 1063–1135),
+            <a href="https://buddhism.org/pages/The-Blue-Cliff-Record" target="_blank" rel="noopener">buddhism.org</a>.
+            Gateless Gate (Wumen Huikai, 1228), trans. Senzaki &amp; Reps (1934),
+            <a href="https://en.wikisource.org/wiki/The_Gateless_Gate" target="_blank" rel="noopener">Wikisource</a>.
+            Both public domain.
+          </p>
+        </div>
+        <div class="footer-row">
+          <p>
+            <strong>Daodejing</strong> — Laozi (~6th c. BCE), trans. James Legge (1891),
+            <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>.
+            Public domain.
+          </p>
+        </div>
+      </div>
+      
       <div class="footer-row">
+        <br>
         <p>&copy; 2026 Silent Words v0.4.0</p>
       </div>
       <div class="footer-row">
@@ -108,36 +128,14 @@
           <a href="https://github.com/janekslezak/SilentWords/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a>
           -
           <a href="https://github.com/janekslezak/SilentWords/blob/main/README.md" target="_blank" rel="noopener">Readme</a>
-          -
-          <button id="btn-details" class="btn-details" aria-expanded="false" aria-controls="credits-panel">Credits</button>
         </p>
       </div>
       <div class="footer-row">
-        <p>This site is powered by <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify.</a></p>
+        <p>This site is powered by <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify</a>.</p>
       </div>
       <div class="footer-row">
-        <p><a href="https://jwaseon.netlify.app/" target="_blank" rel="noopener">Meditate!</a></p>
-      </div>
-    </div>
-
-    <div id="credits-panel" class="credits-panel" hidden>
-      <div class="credits-content">
-        <div class="credits-item">
-          <strong>Dhammapada</strong>
-          <p>Translation by F. Max Müller (1881). Sourced from <a href="https://www.gutenberg.org/ebooks/2017" target="_blank" rel="noopener">Project Gutenberg #2017</a>. Public domain.</p>
-        </div>
-
-        <div class="credits-item">
-          <strong>Koans</strong>
-          <p><em>Blue Cliff Record</em> by Yuanwu Keqin (1063–1135). Sourced from <a href="https://buddhism.org/pages/The-Blue-Cliff-Record" target="_blank" rel="noopener">buddhism.org</a>. <br>
-            <em>Gateless Gate</em> by Wumen Huikai (1228), translation by Senzaki & Reps (1934) from <a href="https://en.wikisource.org/wiki/The_Gateless_Gate" target="_blank" rel="noopener">Wikisource</a>. Both public domain.</p>
-        </div>
-
-        <div class="credits-item">
-          <strong>Dao</strong>
-          <p><em>Daodejing</em> Attributed to Laozi (~6th c. BCE). Translation by James Legge (1891). Sourced from <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>.<br>
-          <em>Zhuangzi</em> Attributed to Zhuang Zhou (~4th c. BCE). Translation by Herbert Giles (1889). Sourced from <a href="https://www.gutenberg.org/ebooks/59709" target="_blank" rel="noopener">Project Gutenberg #59709</a>. Both public domain.</p>
-        </div>
+        <br>
+        <p><a href="https://jwaseon.netlify.app/" target="_blank" rel="noopener">Silent Bell</a></p>
       </div>
     </div>
   </footer>
