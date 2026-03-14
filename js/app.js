@@ -1,344 +1,238 @@
 /**
- * Main Application Logic
+ * Silent Words - Main Application
+ * With Language Switcher Integration
  */
 
-import { SELECTORS, KEYBOARD_SHORTCUTS } from './constants.js';
 import { i18n } from './i18n.js';
-import { db } from './db.js';
-import { quotesManager } from './quotes.js';
-import { 
-  debounce, 
-  showToast, 
-  copyToClipboard, 
-  shareQuote, 
-  detectTheme, 
-  setTheme, 
-  toggleTheme 
-} from './utils.js';
 
 class App {
   constructor() {
-    this.elements = {};
-    this.debouncedResize = debounce(this.handleResize.bind(this), 250);
-    this.isReady = false;
+    this.quotes = [];
+    this.currentIndex = 0;
+    this.currentLang = 'en';
+    this.db = null;
   }
 
   async init() {
-    try {
-      // Initialize i18n first
-      await i18n.init();
-      
-      // Initialize database
-      await db.init();
-      
-      // Cache DOM elements
-      this.cacheElements();
-      
-      // Setup theme
-      const savedTheme = detectTheme();
-      setTheme(savedTheme);
-      
-      // Setup event listeners
-      this.setupEventListeners();
-      
-      // Load quotes
-      await this.loadQuotes();
-      
-      // Initial render
-      this.render();
-      
-      // Register service worker
-      this.registerSW();
-      
-      this.isReady = true;
-      console.log('[App] Initialized successfully');
-      
-    } catch (error) {
-      console.error('[App] Initialization error:', error);
-      this.showError();
+    // Initialize i18n first
+    await i18n.init();
+    this.currentLang = i18n.getCurrent();
+    
+    // Cache DOM elements
+    this.els = {
+      loading: document.getElementById('loading'),
+      main: document.getElementById('main'),
+      quoteText: document.getElementById('quote-text'),
+      quoteSource: document.getElementById('quote-source'),
+      quoteChapter: document.getElementById('quote-chapter'),
+      toast: document.getElementById('toast'),
+      toastMsg: document.getElementById('toast-message')
+    };
+
+    // Setup event listeners
+    this.setupListeners();
+    
+    // Setup theme
+    this.initTheme();
+    
+    // Load quotes
+    await this.loadQuotes();
+    
+    // Show main screen
+    this.els.loading.classList.add('hidden');
+    this.els.main.classList.remove('hidden');
+    
+    // Display first quote
+    this.displayQuote();
+
+    // Register SW
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
     }
   }
 
-  cacheElements() {
-    const els = {};
-    Object.keys(SELECTORS).forEach(key => {
-      els[key] = document.querySelector(SELECTORS[key]);
-    });
-    this.elements = els;
-  }
-
-  setupEventListeners() {
-    // Theme toggle
-    if (this.elements.themeToggle) {
-      this.elements.themeToggle.addEventListener('click', () => {
-        toggleTheme();
-      });
-    }
-
+  setupListeners() {
     // Language toggle
-    if (this.elements.langToggle) {
-      this.elements.langToggle.addEventListener('click', () => {
-        this.handleLanguageToggle();
-      });
-      
-      // Listen for language changes
-      i18n.onChange((lang) => {
-        this.updateLanguageButton();
-        this.handleLanguageChange();
-      });
-      
-      // Set initial state
-      this.updateLanguageButton();
-    }
+    document.getElementById('lang-toggle')?.addEventListener('click', () => {
+      const newLang = i18n.toggle();
+      this.handleLanguageChange(newLang);
+    });
+
+    // Theme toggle
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+      this.toggleTheme();
+    });
 
     // Navigation
-    if (this.elements.prevBtn) {
-      this.elements.prevBtn.addEventListener('click', () => this.showPrevious());
-    }
-    if (this.elements.nextBtn) {
-      this.elements.nextBtn.addEventListener('click', () => this.showNext());
-    }
-    if (this.elements.randomBtn) {
-      this.elements.randomBtn.addEventListener('click', () => this.showRandom());
-    }
+    document.getElementById('prev-btn')?.addEventListener('click', () => this.prevQuote());
+    document.getElementById('next-btn')?.addEventListener('click', () => this.nextQuote());
+    document.getElementById('random-btn')?.addEventListener('click', () => this.randomQuote());
 
     // Actions
-    if (this.elements.copyBtn) {
-      this.elements.copyBtn.addEventListener('click', () => this.handleCopy());
-    }
-    if (this.elements.shareBtn) {
-      this.elements.shareBtn.addEventListener('click', () => this.handleShare());
-    }
+    document.getElementById('copy-btn')?.addEventListener('click', () => this.copyQuote());
+    document.getElementById('share-btn')?.addEventListener('click', () => this.shareQuote());
 
-    // About modal
-    if (this.elements.aboutBtn) {
-      this.elements.aboutBtn.addEventListener('click', () => this.openAbout());
-    }
-    if (this.elements.closeAbout) {
-      this.elements.closeAbout.addEventListener('click', () => this.closeAbout());
-    }
-    if (this.elements.aboutModal) {
-      this.elements.aboutModal.addEventListener('click', (e) => {
-        if (e.target === this.elements.aboutModal) this.closeAbout();
-      });
-    }
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => this.handleKeyboard(e));
-
-    // Window resize
-    window.addEventListener('resize', this.debouncedResize);
-
-    // Install prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      this.deferredPrompt = e;
-      if (this.elements.installBtn) {
-        this.elements.installBtn.style.display = 'block';
-        this.elements.installBtn.addEventListener('click', () => this.handleInstall());
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      
+      switch(e.key) {
+        case 'ArrowLeft': this.prevQuote(); break;
+        case 'ArrowRight': this.nextQuote(); break;
+        case ' ': this.randomQuote(); e.preventDefault(); break;
+        case 'c': case 'C': this.copyQuote(); break;
+        case 's': case 'S': this.shareQuote(); break;
+        case 't': case 'T': this.toggleTheme(); break;
+        case 'l': case 'L': 
+          const newLang = i18n.toggle();
+          this.handleLanguageChange(newLang);
+          break;
       }
     });
+
+    // Listen for i18n changes
+    i18n.onChange((lang) => {
+      this.currentLang = lang;
+    });
+  }
+
+  async handleLanguageChange(newLang) {
+    // Reload quotes for new language
+    this.els.loading.classList.remove('hidden');
+    this.els.main.classList.add('hidden');
+    
+    await this.loadQuotes();
+    
+    this.els.loading.classList.add('hidden');
+    this.els.main.classList.remove('hidden');
+    this.displayQuote();
+    
+    this.showToast(i18n.getCurrent() === 'pl' ? 'Zmieniono język' : 'Language changed');
   }
 
   async loadQuotes() {
-    if (this.elements.loading) {
-      this.elements.loading.style.display = 'flex';
-    }
-    
-    const success = await quotesManager.loadAllQuotes();
-    
-    if (this.elements.loading) {
-      this.elements.loading.style.display = 'none';
-    }
-    
-    if (!success) {
-      this.showError();
-    }
-  }
-
-  handleLanguageToggle() {
-    const newLang = i18n.toggleLanguage();
-    console.log(`[App] Language switched to: ${newLang}`);
-  }
-
-  async handleLanguageChange() {
-    // Reload quotes with new language
-    if (this.elements.loading) {
-      this.elements.loading.style.display = 'flex';
-    }
-    
-    await quotesManager.reloadWithLanguage();
-    
-    if (this.elements.loading) {
-      this.elements.loading.style.display = 'none';
-    }
-    
-    // Update UI text
-    i18n.updatePageContent();
-    
-    // Re-render current quote
-    this.render();
-    
-    showToast('ui.languageToggle');
-  }
-
-  updateLanguageButton() {
-    if (this.elements.langToggle) {
-      const codeEl = this.elements.langToggle.querySelector('.lang-code');
-      if (codeEl) {
-        codeEl.textContent = i18n.getLanguageDisplay();
+    try {
+      // Try to load language-specific quotes
+      const response = await fetch(`data/quotes-${this.currentLang}.json`);
+      
+      if (!response.ok) {
+        // Fallback to English if translation not available
+        if (this.currentLang !== 'en') {
+          const fallback = await fetch('data/quotes-en.json');
+          this.quotes = await fallback.json();
+        } else {
+          throw new Error('Failed to load quotes');
+        }
+      } else {
+        this.quotes = await response.json();
       }
+      
+      this.currentIndex = 0;
+    } catch (error) {
+      console.error('Failed to load quotes:', error);
+      // Use minimal fallback data
+      this.quotes = [{
+        text: this.currentLang === 'pl' ? 'Błąd ładowania cytatów' : 'Error loading quotes',
+        source: 'Error',
+        chapter: ''
+      }];
     }
   }
 
-  render() {
-    const quote = quotesManager.getCurrentQuote();
+  displayQuote() {
+    const quote = this.quotes[this.currentIndex];
+    if (!quote) return;
+
+    this.els.quoteText.textContent = quote.text;
+    this.els.quoteSource.textContent = quote.source || '';
+    this.els.quoteChapter.textContent = quote.chapter || '';
     
-    if (!quote) {
-      if (this.elements.quoteText) {
-        this.elements.quoteText.textContent = i18n.t('ui.loading');
-      }
-      return;
-    }
-
-    // Update quote content
-    if (this.elements.quoteText) {
-      this.elements.quoteText.textContent = quote.text;
-    }
-    if (this.elements.quoteSource) {
-      this.elements.quoteSource.textContent = quote.sourceDisplay;
-    }
-    if (this.elements.quoteAuthor) {
-      this.elements.quoteAuthor.textContent = quote.author || '';
-    }
-    if (this.elements.quoteNumber) {
-      const progress = quotesManager.getProgress();
-      this.elements.quoteNumber.textContent = `${progress.current} / ${progress.total}`;
-    }
-
     // Update page title
-    document.title = `${i18n.t('ui.title')} — ${quote.sourceDisplay}`;
+    document.title = `${quote.source} — Silent Words`;
   }
 
-  showNext() {
-    quotesManager.next();
-    this.render();
+  nextQuote() {
+    this.currentIndex = (this.currentIndex + 1) % this.quotes.length;
+    this.displayQuote();
   }
 
-  showPrevious() {
-    quotesManager.previous();
-    this.render();
+  prevQuote() {
+    this.currentIndex = (this.currentIndex - 1 + this.quotes.length) % this.quotes.length;
+    this.displayQuote();
   }
 
-  showRandom() {
-    quotesManager.random();
-    this.render();
-  }
-
-  async handleCopy() {
-    const quote = quotesManager.getCurrentQuote();
-    if (quote) {
-      const text = `"${quote.text}" — ${quote.sourceDisplay}`;
-      await copyToClipboard(text);
-    }
-  }
-
-  async handleShare() {
-    const quote = quotesManager.getCurrentQuote();
-    if (quote) {
-      await shareQuote(quote);
-    }
-  }
-
-  handleKeyboard(e) {
-    // Ignore if typing in an input
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  randomQuote() {
+    let newIndex;
+    do {
+      newIndex = Math.floor(Math.random() * this.quotes.length);
+    } while (newIndex === this.currentIndex && this.quotes.length > 1);
     
-    const key = e.key.toUpperCase();
+    this.currentIndex = newIndex;
+    this.displayQuote();
+  }
+
+  async copyQuote() {
+    const quote = this.quotes[this.currentIndex];
+    const text = `"${quote.text}" — ${quote.source}`;
     
-    switch(key) {
-      case 'ARROWRIGHT':
-        e.preventDefault();
-        this.showNext();
-        break;
-      case 'ARROWLEFT':
-        e.preventDefault();
-        this.showPrevious();
-        break;
-      case ' ':
-        e.preventDefault();
-        this.showRandom();
-        break;
-      case 'C':
-        this.handleCopy();
-        break;
-      case 'S':
-        this.handleShare();
-        break;
-      case 'T':
-        toggleTheme();
-        break;
-      case 'L':
-        this.handleLanguageToggle();
-        break;
-      case 'ESCAPE':
-        this.closeAbout();
-        break;
+    try {
+      await navigator.clipboard.writeText(text);
+      this.showToast(i18n.t('copySuccess', 'Copied to clipboard'));
+    } catch (err) {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      this.showToast(i18n.t('copySuccess', 'Copied to clipboard'));
     }
   }
 
-  openAbout() {
-    if (this.elements.aboutModal) {
-      this.elements.aboutModal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-  }
+  async shareQuote() {
+    const quote = this.quotes[this.currentIndex];
+    const shareData = {
+      title: 'Silent Words',
+      text: `"${quote.text}" — ${quote.source}`,
+      url: window.location.href
+    };
 
-  closeAbout() {
-    if (this.elements.aboutModal) {
-      this.elements.aboutModal.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-  }
-
-  handleResize() {
-    // Handle responsive adjustments if needed
-  }
-
-  async handleInstall() {
-    if (!this.deferredPrompt) return;
-    
-    this.deferredPrompt.prompt();
-    const { outcome } = await this.deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      console.log('[App] User installed the app');
-      if (this.elements.installBtn) {
-        this.elements.installBtn.style.display = 'none';
-      }
-    }
-    this.deferredPrompt = null;
-  }
-
-  showError() {
-    if (this.elements.quoteText) {
-      this.elements.quoteText.textContent = i18n.t('ui.errorLoading');
-    }
-  }
-
-  async registerSW() {
-    if ('serviceWorker' in navigator) {
+    if (navigator.share) {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('[App] SW registered:', registration.scope);
-      } catch (error) {
-        console.error('[App] SW registration failed:', error);
+        await navigator.share(shareData);
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error('Share failed:', err);
       }
+    } else {
+      this.copyQuote();
     }
+  }
+
+  initTheme() {
+    const saved = localStorage.getItem('silentwords-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+
+  toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('silentwords-theme', next);
+  }
+
+  showToast(message) {
+    this.els.toastMsg.textContent = message;
+    this.els.toast.classList.add('show');
+    setTimeout(() => {
+      this.els.toast.classList.remove('show');
+    }, 2000);
   }
 }
 
-// Initialize app when DOM is ready
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
   const app = new App();
   app.init();
