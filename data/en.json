@@ -5,18 +5,28 @@
   },
   "ui": {
     "title": "Silent Words",
+    "subtitle": "Buddhist & Taoist Quotes",
     "loading": "Loading databases...",
     "copySuccess": "Copied to clipboard",
+    "shareSuccess": "Shared successfully",
+    "offlineReady": "Ready for offline use",
+    "errorLoading": "Error loading quotes",
+    "refresh": "Refresh",
     "share": "Share",
     "copy": "Copy",
-    "next": "Next quote",
-    "previous": "Previous quote",
+    "next": "Next",
+    "previous": "Previous",
+    "random": "Random",
     "themeToggle": "Toggle dark mode",
-    "languageToggle": "Change language"
+    "languageToggle": "Change language",
+    "install": "Install App",
+    "about": "About",
+    "close": "Close"
   },
   "quotes": {
     "sourceDhammapada": "Dhammapada",
     "sourceZen": "Zen Koans",
-    "sourceTao": "Tao Te Ching"
+    "sourceTao": "Tao Te Ching",
+    "sourceUnknown": "Unknown Source"
   }
 }
