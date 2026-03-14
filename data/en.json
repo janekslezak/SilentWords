@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "language": "English",
+    "code": "en"
+  },
+  "ui": {
+    "title": "Silent Words",
+    "loading": "Loading databases...",
+    "copySuccess": "Copied to clipboard",
+    "share": "Share",
+    "copy": "Copy",
+    "next": "Next quote",
+    "previous": "Previous quote",
+    "themeToggle": "Toggle dark mode",
+    "languageToggle": "Change language"
+  },
+  "quotes": {
+    "sourceDhammapada": "Dhammapada",
+    "sourceZen": "Zen Koans",
+    "sourceTao": "Tao Te Ching"
+  }
+}
