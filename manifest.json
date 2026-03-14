@@ -1,67 +1,55 @@
 {
   "name": "Silent Words",
-  "short_name": "Silent Words",
-  "description": "Contemplative quotes from the Dhammapada, Zen Koans, and Daodejing",
+  "short_name": "SilentWords",
+  "description": "Buddhist & Taoist Quotes",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#1c1b19",
-  "theme_color": "#1c1b19",
-  "categories": ["books", "lifestyle", "philosophy", "spirituality"],
+  "background_color": "#121212",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Random Dhammapada",
-      "short_name": "Dhammapada",
-      "description": "Get a random Dhammapada quote",
-      "url": "/?category=dhammapada",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Random Koan",
-      "short_name": "Koans",
-      "description": "Get a random Zen Koan",
-      "url": "/?category=koans",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Random Tao",
-      "short_name": "Daodejing",
-      "description": "Get a random Daodejing verse",
-      "url": "/?category=tao",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "screenshots/quote-dark.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Silent Words quote display"
-    },
-    {
-      "src": "screenshots/quote-mobile.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Silent Words on mobile"
+      "type": "image/png"
     }
   ],
   "lang": "en",
-  "dir": "ltr"
+  "categories": ["lifestyle", "education", "books"],
+  "screenshots": []
 }
