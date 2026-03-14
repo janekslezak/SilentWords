@@ -1,8 +1,38 @@
 /**
  * Silent Words - Main Application
+ * No external dependencies - self contained
  */
 
-import { SOURCE_MAP, TRANSLATIONS } from './constants.js';
+// Constants inline to avoid module loading issues
+const SOURCE_MAP = {
+  'dhammapada': 'dhammapada',
+  'koans': 'zen',
+  'tao': 'dao',
+  'all': ['dhammapada', 'zen', 'dao']
+};
+
+const TRANSLATIONS = {
+  en: {
+    loading: 'Loading...',
+    newQuote: 'New Quote',
+    collection: 'Collection:',
+    all: 'All',
+    koans: 'Koans',
+    copySuccess: 'Copied to clipboard',
+    errorLoading: 'Error loading databases',
+    stats: 'quotes loaded'
+  },
+  pl: {
+    loading: 'Ładowanie...',
+    newQuote: 'Nowy Cytat',
+    collection: 'Kolekcja:',
+    all: 'Wszystko',
+    koans: 'Koany',
+    copySuccess: 'Skopiowano do schowka',
+    errorLoading: 'Błąd ładowania baz danych',
+    stats: 'cytatów załadowano'
+  }
+};
 
 class App {
   constructor() {
@@ -11,20 +41,44 @@ class App {
     this.currentLang = localStorage.getItem('sw-lang') || 'en';
     this.currentCategory = 'all';
     this.isLoading = false;
-    
-    // Bind methods
-    this.handlePull = this.handlePull.bind(this);
-    this.handleCopy = this.handleCopy.bind(this);
-    this.handleTheme = this.handleTheme.bind(this);
-    this.handleLang = this.handleLang.bind(this);
-    this.handleSourceChange = this.handleSourceChange.bind(this);
+    this.els = {};
   }
 
   async init() {
-    // Set initial lang attribute
+    console.log('[App] Initializing...');
+    
+    // Set initial lang
     document.documentElement.lang = this.currentLang;
     
     // Cache DOM elements
+    this.cacheElements();
+    
+    // Setup event listeners
+    this.setupListeners();
+    
+    // Setup theme
+    this.initTheme();
+    
+    // Update language button display
+    this.updateLangButton();
+    
+    // Update UI text
+    this.updateUIText();
+    
+    // Setup credits toggle
+    this.setupCreditsToggle();
+    
+    // Load quotes
+    try {
+      await this.loadQuotes();
+      this.showQuote();
+    } catch (err) {
+      console.error('[App] Init error:', err);
+      this.showError();
+    }
+  }
+
+  cacheElements() {
     this.els = {
       loader: document.getElementById('loader'),
       quoteContent: document.getElementById('quote-content'),
@@ -38,41 +92,41 @@ class App {
       btnLang: document.getElementById('btn-lang'),
       stats: document.getElementById('stats'),
       toast: document.getElementById('toast'),
-      sourceBtns: document.querySelectorAll('.source-btn')
+      sourceBtns: document.querySelectorAll('.source-btn'),
+      creditsLink: document.getElementById('credits-link'),
+      creditsContent: document.getElementById('credits-content')
     };
-
-    // Setup event listeners
-    this.setupListeners();
     
-    // Setup theme
-    this.initTheme();
-    
-    // Update language button display
-    this.updateLangButton();
-    
-    // Update UI text
-    this.updateUIText();
-    
-    // Load quotes
-    await this.loadQuotes();
-    
-    // Show first quote
-    this.showQuote();
+    console.log('[App] Elements cached:', Object.keys(this.els));
   }
 
   setupListeners() {
     // Main controls
-    this.els.btnPull.addEventListener('click', this.handlePull);
-    this.els.btnCopy.addEventListener('click', this.handleCopy);
-    this.els.btnTheme.addEventListener('click', this.handleTheme);
-    this.els.btnLang.addEventListener('click', this.handleLang);
+    if (this.els.btnPull) {
+      this.els.btnPull.addEventListener('click', () => this.handlePull());
+    }
+    if (this.els.btnCopy) {
+      this.els.btnCopy.addEventListener('click', () => this.handleCopy());
+    }
+    if (this.els.btnTheme) {
+      this.els.btnTheme.addEventListener('click', () => this.handleTheme());
+    }
+    if (this.els.btnLang) {
+      this.els.btnLang.addEventListener('click', () => this.handleLang());
+      console.log('[App] Language button listener added');
+    }
     
     // Source selection
-    this.els.sourceBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => this.handleSourceChange(e.target.dataset.category));
-    });
+    if (this.els.sourceBtns) {
+      this.els.sourceBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const category = e.target.dataset.category;
+          this.handleSourceChange(category);
+        });
+      });
+    }
     
-    // Keyboard
+    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       if (e.code === 'Space') {
@@ -86,7 +140,20 @@ class App {
     });
   }
 
+  setupCreditsToggle() {
+    if (this.els.creditsLink && this.els.creditsContent) {
+      this.els.creditsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isHidden = this.els.creditsContent.style.display === 'none';
+        this.els.creditsContent.style.display = isHidden ? 'block' : 'none';
+        this.els.creditsLink.textContent = isHidden ? 'Hide Credits' : 'Credits';
+      });
+    }
+  }
+
   async handleLang() {
+    console.log('[App] Toggling language from:', this.currentLang);
+    
     const newLang = this.currentLang === 'en' ? 'pl' : 'en';
     this.currentLang = newLang;
     localStorage.setItem('sw-lang', newLang);
@@ -96,14 +163,23 @@ class App {
     this.updateUIText();
     
     // Reload quotes with new language
-    await this.loadQuotes();
-    this.showQuote();
+    this.els.loader.style.display = 'flex';
+    this.els.quoteContent.style.display = 'none';
+    
+    try {
+      await this.loadQuotes();
+      this.showQuote();
+    } catch (err) {
+      console.error('[App] Error reloading after lang change:', err);
+      this.showError();
+    }
   }
 
   updateLangButton() {
     const codeEl = this.els.btnLang.querySelector('.lang-code');
     if (codeEl) {
       codeEl.textContent = this.currentLang.toUpperCase();
+      console.log('[App] Language button updated to:', this.currentLang.toUpperCase());
     }
   }
 
@@ -122,72 +198,110 @@ class App {
   async handleSourceChange(category) {
     if (this.isLoading || category === this.currentCategory) return;
     
+    console.log('[App] Changing source to:', category);
+    
     // Update active button
     this.els.sourceBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.category === category);
     });
     
     this.currentCategory = category;
+    
+    // Show loader
+    this.els.loader.style.display = 'flex';
+    this.els.quoteContent.style.display = 'none';
+    
     await this.loadQuotes();
     this.showQuote();
   }
 
   async loadQuotes() {
     this.isLoading = true;
-    this.els.btnPull.disabled = true;
-    this.els.loader.style.display = 'flex';
-    this.els.quoteContent.style.display = 'none';
+    if (this.els.btnPull) this.els.btnPull.disabled = true;
     
     this.quotes = [];
     
-    try {
-      const sources = this.currentCategory === 'all' 
-        ? SOURCE_MAP.all 
-        : [SOURCE_MAP[this.currentCategory]];
+    const sources = this.currentCategory === 'all' 
+      ? SOURCE_MAP.all 
+      : [SOURCE_MAP[this.currentCategory]];
+    
+    console.log('[App] Loading sources:', sources, 'Language:', this.currentLang);
+    
+    let loadedCount = 0;
+    let errors = [];
+    
+    for (const source of sources) {
+      const fileName = `${source}-${this.currentLang}.json`;
+      console.log('[App] Fetching:', fileName);
       
-      for (const source of sources) {
-        const fileName = `${source}-${this.currentLang}.json`;
-        try {
-          const response = await fetch(`data/${fileName}`);
-          if (!response.ok) {
-            // Try fallback to English if translation missing
-            if (this.currentLang !== 'en') {
-              const fallback = await fetch(`data/${source}-en.json`);
-              if (fallback.ok) {
-                const data = await fallback.json();
+      try {
+        const response = await fetch(`data/${fileName}`);
+        
+        if (!response.ok) {
+          // Try fallback to English if translation missing
+          if (this.currentLang !== 'en') {
+            console.log(`[App] ${fileName} not found, trying English fallback`);
+            const fallbackName = `${source}-en.json`;
+            const fallbackResponse = await fetch(`data/${fallbackName}`);
+            
+            if (fallbackResponse.ok) {
+              const data = await fallbackResponse.json();
+              if (Array.isArray(data)) {
                 this.quotes.push(...data);
+                loadedCount += data.length;
+                console.log(`[App] Loaded ${data.length} quotes from ${fallbackName}`);
               }
+            } else {
+              errors.push(`${fileName} (fallback failed)`);
             }
           } else {
-            const data = await response.json();
-            this.quotes.push(...data);
+            errors.push(fileName);
           }
-        } catch (e) {
-          console.warn(`Failed to load ${fileName}:`, e);
+        } else {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            this.quotes.push(...data);
+            loadedCount += data.length;
+            console.log(`[App] Loaded ${data.length} quotes from ${fileName}`);
+          } else {
+            console.warn(`[App] Data from ${fileName} is not an array:`, data);
+          }
         }
+      } catch (e) {
+        console.error(`[App] Error loading ${fileName}:`, e);
+        errors.push(fileName);
       }
-      
-      // Shuffle
-      this.shuffleQuotes();
-      this.currentIndex = 0;
-      
-      // Update stats
-      this.updateStats();
-      
-    } catch (error) {
-      console.error('Error loading quotes:', error);
-      this.quotes = [{
-        text: this.currentLang === 'pl' ? 'Błąd ładowania cytatów' : 'Error loading quotes',
-        author: '',
-        source: 'Error',
-        tradition: ''
-      }];
-    } finally {
-      this.isLoading = false;
-      this.els.btnPull.disabled = false;
-      this.els.loader.style.display = 'none';
-      this.els.quoteContent.style.display = 'block';
     }
+    
+    this.isLoading = false;
+    if (this.els.btnPull) this.els.btnPull.disabled = false;
+    
+    if (this.quotes.length === 0) {
+      console.error('[App] No quotes loaded. Errors:', errors);
+      throw new Error('No databases found');
+    }
+    
+    console.log(`[App] Total quotes loaded: ${this.quotes.length}`);
+    
+    // Shuffle
+    this.shuffleQuotes();
+    this.currentIndex = 0;
+    
+    // Update stats
+    this.updateStats();
+    
+    // Hide loader, show content
+    this.els.loader.style.display = 'none';
+    this.els.quoteContent.style.display = 'block';
+  }
+
+  showError() {
+    const t = TRANSLATIONS[this.currentLang];
+    this.els.stats.textContent = t.errorLoading || 'Error: No databases found';
+    this.els.stats.style.color = 'var(--danger)';
+    this.els.loader.style.display = 'none';
+    this.els.quoteContent.style.display = 'block';
+    this.els.quoteText.textContent = t.errorLoading || 'Error loading databases';
   }
 
   shuffleQuotes() {
@@ -198,21 +312,27 @@ class App {
   }
 
   showQuote() {
-    const quote = this.quotes[this.currentIndex];
-    if (!quote) return;
+    if (this.quotes.length === 0) return;
     
-    this.els.quoteText.textContent = quote.text;
+    const quote = this.quotes[this.currentIndex];
+    
+    this.els.quoteText.textContent = quote.text || '';
     this.els.quoteAuthor.textContent = quote.author ? `— ${quote.author}` : '';
     this.els.quoteSource.textContent = quote.source || '';
     this.els.quoteTradition.textContent = quote.tradition || '';
+    
+    document.title = `${quote.source || 'Silent Words'} — ${quote.author || ''}`;
   }
 
   handlePull() {
+    if (this.quotes.length === 0) return;
     this.currentIndex = (this.currentIndex + 1) % this.quotes.length;
     this.showQuote();
   }
 
   async handleCopy() {
+    if (this.quotes.length === 0) return;
+    
     const quote = this.quotes[this.currentIndex];
     const text = `"${quote.text}" ${quote.author ? `— ${quote.author}` : ''}`;
     
@@ -244,13 +364,16 @@ class App {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const theme = saved || (prefersDark ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', theme);
-    this.els.btnTheme.textContent = theme === 'dark' ? '🌙' : '☀️';
+    if (this.els.btnTheme) {
+      this.els.btnTheme.textContent = theme === 'dark' ? '🌙' : '☀️';
+    }
   }
 
   updateStats() {
-    const count = this.quotes.length;
     const t = TRANSLATIONS[this.currentLang];
-    this.els.stats.textContent = `${count} quotes loaded`;
+    const count = this.quotes.length;
+    this.els.stats.textContent = `${count} ${t.stats || 'quotes loaded'}`;
+    this.els.stats.style.color = 'var(--muted)';
   }
 
   showToast(message) {
@@ -262,8 +385,13 @@ class App {
   }
 }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    const app = new App();
+    app.init();
+  });
+} else {
   const app = new App();
   app.init();
-});
+}
