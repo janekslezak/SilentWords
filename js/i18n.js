@@ -1,117 +1,91 @@
 /**
  * Internationalization Module
- * Handles language switching and translation loading
+ * Minimal implementation for EN/PL switch
  */
 
 class I18n {
   constructor() {
-    this.currentLang = localStorage.getItem('silentwords-language') || 'en';
+    // Default to English or saved preference
+    this.currentLang = localStorage.getItem('silentwords-lang') || 'en';
     this.translations = {};
     this.listeners = [];
-    this.isReady = false;
   }
 
   async init() {
-    await this.loadLanguage(this.currentLang, false);
-    this.isReady = true;
-    return this;
+    await this.loadLanguage(this.currentLang);
+    this.updateDocumentLang();
   }
 
-  async loadLanguage(lang, notify = true) {
+  async loadLanguage(lang) {
     try {
       const response = await fetch(`data/${lang}.json`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) throw new Error(`Failed to load ${lang}`);
       
       this.translations = await response.json();
       this.currentLang = lang;
-      localStorage.setItem('silentwords-language', lang);
-      document.documentElement.lang = lang;
+      localStorage.setItem('silentwords-lang', lang);
       
-      // Update meta tags
-      this.updateMetaTags();
+      this.updateUI();
+      this.notifyListeners();
       
-      if (notify) {
-        this.notifyListeners();
-      }
-      
-      return true;
     } catch (error) {
-      console.error(`[i18n] Failed to load language ${lang}:`, error);
-      // Fallback to English if available
-      if (lang !== 'en') {
-        return this.loadLanguage('en', notify);
-      }
-      return false;
+      console.error('[i18n] Error loading language:', error);
+      // Fallback to empty object if file missing
+      this.translations = {};
     }
   }
 
-  toggleLanguage() {
+  toggle() {
     const newLang = this.currentLang === 'en' ? 'pl' : 'en';
     this.loadLanguage(newLang);
     return newLang;
   }
 
-  t(key, fallback = null) {
-    const keys = key.split('.');
-    let value = this.translations;
-    
-    for (const k of keys) {
-      value = value?.[k];
-      if (value === undefined) break;
-    }
-    
-    return value || fallback || key;
-  }
-
-  getCurrentLanguage() {
+  getCurrent() {
     return this.currentLang;
   }
 
-  getLanguageDisplay() {
-    return this.currentLang.toUpperCase();
+  t(key, fallback = '') {
+    return this.translations[key] || fallback || key;
+  }
+
+  updateDocumentLang() {
+    document.documentElement.lang = this.currentLang;
+  }
+
+  updateUI() {
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (this.translations[key]) {
+        el.textContent = this.translations[key];
+      }
+    });
+
+    // Update lang toggle button display
+    const langBtn = document.getElementById('lang-toggle');
+    if (langBtn) {
+      const codeEl = langBtn.querySelector('.lang-code');
+      if (codeEl) {
+        codeEl.textContent = this.currentLang.toUpperCase();
+      }
+    }
   }
 
   onChange(callback) {
     this.listeners.push(callback);
-    // Immediately call with current state
-    if (this.isReady) callback(this.currentLang);
   }
 
   notifyListeners() {
-    this.listeners.forEach(callback => {
+    this.listeners.forEach(cb => {
       try {
-        callback(this.currentLang);
+        cb(this.currentLang);
       } catch (e) {
-        console.error('[i18n] Error in listener:', e);
-      }
-    });
-  }
-
-  updateMetaTags() {
-    // Update document title
-    document.title = this.t('ui.title', 'Silent Words');
-    
-    // Update meta description if exists
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.content = this.t('ui.subtitle', 'Buddhist & Taoist Quotes');
-    }
-  }
-
-  // Utility to update all [data-i18n] elements
-  updatePageContent() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      const attr = el.getAttribute('data-i18n-attr');
-      const text = this.t(key);
-      
-      if (attr) {
-        el.setAttribute(attr, text);
-      } else {
-        el.textContent = text;
+        console.error('[i18n] Listener error:', e);
       }
     });
   }
 }
 
+// Singleton instance
 export const i18n = new I18n();
