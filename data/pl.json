@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "language": "Polski",
+    "code": "pl"
+  },
+  "ui": {
+    "title": "Silent Words - Słowa Ciszy",
+    "loading": "Ładowanie baz danych...",
+    "copySuccess": "Skopiowano do schowka",
+    "share": "Udostępnij",
+    "copy": "Kopiuj",
+    "next": "Następny cytat",
+    "previous": "Poprzedni cytat",
+    "themeToggle": "Przełącz tryb ciemny",
+    "languageToggle": "Zmień język"
+  },
+  "quotes": {
+    "sourceDhammapada": "Dhammapada",
+    "sourceZen": "Koań Zen",
+    "sourceTao": "Tao Te Ching"
+  }
+}
