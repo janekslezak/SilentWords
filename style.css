@@ -189,6 +189,41 @@ header {
   background: rgba(196, 167, 125, 0.08);
 }
 
+/* ─── Language Controls ───────────────────────────────────────── */
+
+.language-controls {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+  justify-content: center;
+}
+
+.language-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.language-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.language-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(196, 167, 125, 0.08);
+}
+
 /* ─── Main View ───────────────────────────────────────────────── */
 
 .view {
