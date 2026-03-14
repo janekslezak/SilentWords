@@ -2,12 +2,11 @@
  * Silent Words - Main Application
  */
 
-// File mapping: button category -> filename prefix
 const SOURCE_MAP = {
   'dhammapada': 'dhammapada',
   'koans': 'zen',
-  'tao': 'dao',        // Button "Dao" with category="tao" loads dao-*.json
-  'dao': 'dao',        // Fallback if button uses category="dao"
+  'koans': 'zen',
+  'tao': 'dao',        // HTML button data-category="tao" -> loads dao-*.json
   'all': ['dhammapada', 'zen', 'dao']
 };
 
@@ -19,7 +18,7 @@ const TRANSLATIONS = {
     all: 'All',
     koans: 'Koans',
     copySuccess: 'Copied to clipboard',
-    errorLoading: 'Error: No databases found',
+    errorLoading: 'Error loading databases',
     stats: 'quotes loaded'
   },
   pl: {
@@ -29,7 +28,7 @@ const TRANSLATIONS = {
     all: 'Wszystko',
     koans: 'Koany',
     copySuccess: 'Skopiowano do schowka',
-    errorLoading: 'Błąd: Nie znaleziono baz danych',
+    errorLoading: 'Błąd ładowania baz danych',
     stats: 'cytatów załadowano'
   }
 };
@@ -45,7 +44,7 @@ class App {
   }
 
   async init() {
-    console.log('[App] Starting...');
+    console.log('[App] Initializing...');
     document.documentElement.lang = this.currentLang;
     
     this.cacheElements();
@@ -94,7 +93,7 @@ class App {
       this.els.sourceBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
           const category = e.target.dataset.category;
-          console.log('[App] Source button clicked:', category);
+          console.log('[App] Clicked category:', category); // DEBUG
           this.handleSourceChange(category);
         });
       });
@@ -152,14 +151,17 @@ class App {
   async handleSourceChange(category) {
     if (!category || this.isLoading || category === this.currentCategory) return;
     
-    console.log('[App] Changing source to:', category);
+    console.log('[App] Switching to:', category); // DEBUG
     
-    // Update active button state
     this.els.sourceBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.category === category);
     });
     
     this.currentCategory = category;
+    
+    if (this.els.loader) this.els.loader.style.display = 'flex';
+    if (this.els.quoteContent) this.els.quoteContent.style.display = 'none';
+    
     await this.loadQuotes();
     this.showQuote();
   }
@@ -170,30 +172,36 @@ class App {
     
     this.quotes = [];
     
-    // Get source(s) to load
+    // Determine which files to load
     let sources = [];
     if (this.currentCategory === 'all') {
       sources = SOURCE_MAP.all;
     } else {
-      // Map category to filename prefix, fallback to category name itself
+      // Map category to filename prefix
       const mapped = SOURCE_MAP[this.currentCategory];
-      sources = [mapped || this.currentCategory];
+      if (mapped) {
+        sources = Array.isArray(mapped) ? mapped : [mapped];
+      } else {
+        sources = [this.currentCategory]; // Fallback to category name
+      }
     }
     
-    console.log('[App] Loading sources:', sources, 'Lang:', this.currentLang);
+    console.log('[App] Will load sources:', sources); // DEBUG
     
     for (const source of sources) {
       const fileName = `${source}-${this.currentLang}.json`;
-      console.log('[App] Fetching:', fileName);
+      const url = `data/${fileName}`;
+      
+      console.log(`[App] Fetching: ${url}`); // DEBUG
       
       try {
-        let response = await fetch(`data/${fileName}`);
+        let response = await fetch(url);
         
-        // If not found and not English, try English fallback
+        // If fails and not English, try English fallback
         if (!response.ok && this.currentLang !== 'en') {
-          const fallbackName = `${source}-en.json`;
-          console.log(`[App] ${fileName} not found, trying ${fallbackName}`);
-          response = await fetch(`data/${fallbackName}`);
+          const fallbackUrl = `data/${source}-en.json`;
+          console.log(`[App] Trying fallback: ${fallbackUrl}`); // DEBUG
+          response = await fetch(fallbackUrl);
         }
         
         if (!response.ok) {
@@ -201,26 +209,29 @@ class App {
         }
         
         const data = await response.json();
+        
         if (Array.isArray(data)) {
           this.quotes.push(...data);
-          console.log(`[App] Loaded ${data.length} quotes from ${source}`);
+          console.log(`[App] SUCCESS: ${data.length} quotes from ${source}`); // DEBUG
         } else {
-          console.warn(`[App] Data from ${source} is not an array`);
+          console.warn(`[App] WARNING: ${source} is not an array`); // DEBUG
         }
       } catch (e) {
-        console.error(`[App] Failed to load ${source}:`, e.message);
+        console.error(`[App] FAILED to load ${source}:`, e.message); // DEBUG
       }
     }
     
     this.isLoading = false;
     if (this.els.btnPull) this.els.btnPull.disabled = false;
     
+    console.log(`[App] Total loaded: ${this.quotes.length} quotes`); // DEBUG
+    
     if (this.quotes.length === 0) {
-      console.error('[App] No quotes loaded from any source');
-      throw new Error('No databases found');
+      console.error('[App] No quotes loaded!'); // DEBUG
+      this.showError();
+      return;
     }
     
-    console.log(`[App] Total: ${this.quotes.length} quotes`);
     this.shuffleQuotes();
     this.currentIndex = 0;
     this.updateStats();
