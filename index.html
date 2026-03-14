@@ -1,149 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#111820" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f0ece4" media="(prefers-color-scheme: light)">
-  <meta name="description" content="Contemplative quotes from Dhammapada, Zen Koans, and Daoist classics">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
-  <title>Silent Words - Buddhist & Taoist Quotes</title>
-
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Buddhist & Taoist Quotes">
+  <meta name="theme-color" content="#1a1a1a">
+  
+  <title>Silent Words</title>
+  
+  <!-- Preconnect to optimize loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Icons -->
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(r => console.log('SW registered:', r.scope))
-          .catch(e => console.error('SW failed:', e));
-      });
-    }
-  </script>
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 </head>
 <body>
-  <div id="offline-indicator" class="offline-indicator" role="status">
-    <span class="offline-dot"></span> Offline Mode
+  <div id="app">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <p data-i18n="ui.loading">Loading databases...</p>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-icon">🔔</span>
+        <div class="brand-text">
+          <h1 data-i18n="ui.title">Silent Words</h1>
+          <span class="brand-subtitle" data-i18n="ui.subtitle">Buddhist & Taoist Quotes</span>
+        </div>
+      </div>
+      
+      <div class="header-controls">
+        <!-- Language Toggle -->
+        <button id="lang-toggle" class="control-btn lang-toggle" aria-label="Change language">
+          <span class="lang-code">EN</span>
+        </button>
+        
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="control-btn theme-toggle" aria-label="Toggle theme">
+          <span class="theme-icon light">☀️</span>
+          <span class="theme-icon dark">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <article class="quote-card">
+        <div class="quote-number" id="quote-number">0 / 0</div>
+        <blockquote class="quote-text" id="quote-text">
+          Loading...
+        </blockquote>
+        <cite class="quote-source" id="quote-source"></cite>
+        <div class="quote-author" id="quote-author"></div>
+      </article>
+
+      <!-- Navigation -->
+      <nav class="quote-nav">
+        <button id="prev-btn" class="nav-btn" aria-label="Previous quote">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        
+        <button id="random-btn" class="nav-btn nav-btn--primary" aria-label="Random quote">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 8h.01M8 8h.01M8 16h.01M16 16h.01M12 12h.01"></path>
+          </svg>
+          <span data-i18n="ui.random">Random</span>
+        </button>
+        
+        <button id="next-btn" class="nav-btn" aria-label="Next quote">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </nav>
+
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <button id="copy-btn" class="action-btn" aria-label="Copy quote">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span data-i18n="ui.copy">Copy</span>
+        </button>
+        
+        <button id="share-btn" class="action-btn" aria-label="Share quote">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          <span data-i18n="ui.share">Share</span>
+        </button>
+        
+        <button id="about-btn" class="action-btn" aria-label="About">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </button>
+        
+        <button id="install-btn" class="action-btn install-btn" style="display: none;" aria-label="Install app">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span data-i18n="ui.install">Install</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal">
+      <div class="modal-content">
+        <header class="modal-header">
+          <h2 data-i18n="ui.about">About</h2>
+          <button id="close-about" class="close-btn" aria-label="Close">×</button>
+        </header>
+        <div class="modal-body">
+          <p><strong data-i18n="ui.title">Silent Words</strong></p>
+          <p>A contemplative quotes app featuring wisdom from the Dhammapada, Zen Koans, and Tao Te Ching.</p>
+          
+          <h3>Keyboard Shortcuts</h3>
+          <ul class="shortcuts-list">
+            <li><kbd>←</kbd> <kbd>→</kbd> Navigate quotes</li>
+            <li><kbd>Space</kbd> Random quote</li>
+            <li><kbd>C</kbd> Copy</li>
+            <li><kbd>S</kbd> Share</li>
+            <li><kbd>T</kbd> Toggle theme</li>
+            <li><kbd>L</kbd> Switch language</li>
+            <li><kbd>Esc</kbd> Close modal</li>
+          </ul>
+          
+          <p class="credits">Public Domain • <a href="https://github.com/janekslezak/SilentWords" target="_blank" rel="noopener">GitHub</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+      <span id="toast-message"></span>
+    </div>
   </div>
 
-  <header>
-    <div class="header-left">
-      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" class="header-icon" aria-hidden="true">
-        <path d="M 50,60 C 44,45 44,28 50,18 C 56,28 56,45 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M 50,60 C 38,50 32,34 36,22 C 44,30 48,46 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M 50,60 C 62,50 68,34 64,22 C 56,30 52,46 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M 50,60 C 34,54 22,40 24,26 C 34,32 44,48 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M 50,60 C 66,54 78,40 76,26 C 66,32 56,48 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M 50,60 C 30,58 14,46 14,32 C 26,36 40,52 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M 50,60 C 70,58 86,46 86,32 C 74,36 60,52 50,60 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M 20,63 Q 50,70 80,63" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-      <span class="header-title">Silent Words</span>
-    </div>
-    <div class="header-controls">
-      <button id="btn-install" class="btn-install" style="display: none;" aria-label="Install app">
-        <span>Install</span>
-      </button>
-      <button id="btn-theme" aria-label="Toggle theme">🌙</button>
-    </div>
-  </header>
-
-  <main class="view active">
-    <div class="quote-card" id="quote-card">
-      <div class="loading-spinner" id="loader">
-        <div class="spinner"></div>
-        <span>Loading...</span>
-      </div>
-
-      <div class="quote-content" id="quote-content" style="display: none;" aria-live="polite" aria-atomic="true">
-        <div class="quote-text" id="quote-text" aria-busy="false"></div>
-        <div class="quote-meta">
-          <span class="quote-author" id="quote-author">—</span>
-          <span class="quote-source" id="quote-source"></span>
-          <span class="quote-tradition" id="quote-tradition"></span>
-        </div>
-      </div>
-    </div>
-
-    <div class="controls">
-      <button id="btn-pull" class="btn-primary" title="Space or Enter">
-        <span class="btn-text">New Quote</span>
-        <span class="btn-icon">⟳</span>
-      </button>
-      <button id="btn-share" class="btn-secondary" aria-label="Share quote" title="Share">
-        <span class="btn-icon">↗</span>
-      </button>
-      <button id="btn-copy" class="btn-secondary" aria-label="Copy quote" title="Copy">
-        <span class="btn-icon">📋</span>
-      </button>
-    </div>
-
-    <div class="source-controls">
-      <div class="source-label">Collection</div>
-      <div class="source-buttons">
-        <button class="source-btn active" data-category="all">All</button>
-        <button class="source-btn" data-category="dhammapada">Dhammapada</button>
-        <button class="source-btn" data-category="koans">Koans</button>
-        <button class="source-btn" data-category="tao">Dao</button>
-      </div>
-    </div>
-
-    <div class="stats" id="stats">Loading databases...</div>
-  </main>
-
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-row">
-        <p>&copy; 2026 Silent Words v0.4.0</p>
-      </div>
-      <div class="footer-row">
-        <p>
-          <a href="https://github.com/janekslezak/SilentWords" target="_blank" rel="noopener">GitHub</a>
-          -
-          <a href="https://github.com/janekslezak/SilentWords/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a>
-          -
-          <a href="https://github.com/janekslezak/SilentWords/blob/main/README.md" target="_blank" rel="noopener">Readme</a>
-          -
-          <button id="btn-details" class="btn-details" aria-expanded="false" aria-controls="credits-panel">Credits</button>
-        </p>
-      </div>
-      <div class="footer-row">
-        <p>This site is powered by <a href="https://www.netlify.com" target="_blank" rel="noopener">Netlify.</a></p>
-      </div>
-      <div class="footer-row">
-        <p><a href="https://jwaseon.netlify.app/" target="_blank" rel="noopener">Meditate!</a></p>
-      </div>
-    </div>
-
-    <div id="credits-panel" class="credits-panel" hidden>
-      <div class="credits-content">
-        <div class="credits-item">
-          <strong>Dhammapada</strong>
-          <p>Translation by F. Max Müller (1881). Sourced from <a href="https://www.gutenberg.org/ebooks/2017" target="_blank" rel="noopener">Project Gutenberg #2017</a>. Public domain.</p>
-        </div>
-
-        <div class="credits-item">
-          <strong>Koans</strong>
-          <p><em>Blue Cliff Record</em> by Yuanwu Keqin (1063–1135). Sourced from <a href="https://buddhism.org/pages/The-Blue-Cliff-Record" target="_blank" rel="noopener">buddhism.org</a>. <br>
-            <em>Gateless Gate</em> by Wumen Huikai (1228), translation by Senzaki & Reps (1934) from <a href="https://en.wikisource.org/wiki/The_Gateless_Gate" target="_blank" rel="noopener">Wikisource</a>. Both public domain.</p>
-        </div>
-
-        <div class="credits-item">
-          <strong>Dao</strong>
-          <p><em>Daodejing</em> Attributed to Laozi (~6th c. BCE). Translation by James Legge (1891). Sourced from <a href="https://www.gutenberg.org/ebooks/216" target="_blank" rel="noopener">Project Gutenberg #216</a>.<br>
-          <em>Zhuangzi</em> Attributed to Zhuang Zhou (~4th c. BCE). Translation by Herbert Giles (1889). Sourced from <a href="https://www.gutenberg.org/ebooks/59709" target="_blank" rel="noopener">Project Gutenberg #59709</a>. Both public domain.</p>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <div id="toast" class="toast" role="status" aria-live="polite">Copied to clipboard</div>
-
-  <script type="module" src="app.js"></script>
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
