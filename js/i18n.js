@@ -1,11 +1,9 @@
 /**
  * Internationalization Module
- * Minimal implementation for EN/PL switch
  */
 
 class I18n {
   constructor() {
-    // Default to English or saved preference
     this.currentLang = localStorage.getItem('silentwords-lang') || 'en';
     this.translations = {};
     this.listeners = [];
@@ -13,7 +11,7 @@ class I18n {
 
   async init() {
     await this.loadLanguage(this.currentLang);
-    this.updateDocumentLang();
+    document.documentElement.lang = this.currentLang;
   }
 
   async loadLanguage(lang) {
@@ -30,7 +28,6 @@ class I18n {
       
     } catch (error) {
       console.error('[i18n] Error loading language:', error);
-      // Fallback to empty object if file missing
       this.translations = {};
     }
   }
@@ -47,10 +44,6 @@ class I18n {
 
   t(key, fallback = '') {
     return this.translations[key] || fallback || key;
-  }
-
-  updateDocumentLang() {
-    document.documentElement.lang = this.currentLang;
   }
 
   updateUI() {
@@ -87,5 +80,4 @@ class I18n {
   }
 }
 
-// Singleton instance
 export const i18n = new I18n();
