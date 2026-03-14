@@ -1,16 +1,16 @@
 /**
  * Silent Words - Main Application
- * With Language Switcher Integration
  */
 
 import { i18n } from './i18n.js';
+import { SOURCES } from './constants.js';
 
 class App {
   constructor() {
     this.quotes = [];
     this.currentIndex = 0;
     this.currentLang = 'en';
-    this.db = null;
+    this.isLoading = false;
   }
 
   async init() {
@@ -35,8 +35,8 @@ class App {
     // Setup theme
     this.initTheme();
     
-    // Load quotes
-    await this.loadQuotes();
+    // Load quotes from all sources
+    await this.loadAllQuotes();
     
     // Show main screen
     this.els.loading.classList.add('hidden');
@@ -72,7 +72,7 @@ class App {
     document.getElementById('copy-btn')?.addEventListener('click', () => this.copyQuote());
     document.getElementById('share-btn')?.addEventListener('click', () => this.shareQuote());
 
-    // Keyboard
+    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       
@@ -89,53 +89,89 @@ class App {
           break;
       }
     });
-
-    // Listen for i18n changes
-    i18n.onChange((lang) => {
-      this.currentLang = lang;
-    });
   }
 
   async handleLanguageChange(newLang) {
-    // Reload quotes for new language
+    this.currentLang = newLang;
+    
+    // Show loading
     this.els.loading.classList.remove('hidden');
     this.els.main.classList.add('hidden');
     
-    await this.loadQuotes();
+    // Reload all quotes with new language
+    await this.loadAllQuotes();
     
+    // Hide loading
     this.els.loading.classList.add('hidden');
     this.els.main.classList.remove('hidden');
+    
+    // Display quote
     this.displayQuote();
     
-    this.showToast(i18n.getCurrent() === 'pl' ? 'Zmieniono język' : 'Language changed');
+    // Show feedback
+    const message = newLang === 'pl' ? 'Zmieniono język na polski' : 'Changed language to English';
+    this.showToast(message);
   }
 
-  async loadQuotes() {
+  async loadAllQuotes() {
+    this.quotes = [];
+    const loadPromises = SOURCES.map(source => this.loadSource(source.id));
+    
     try {
-      // Try to load language-specific quotes
-      const response = await fetch(`data/quotes-${this.currentLang}.json`);
+      await Promise.all(loadPromises);
       
-      if (!response.ok) {
-        // Fallback to English if translation not available
-        if (this.currentLang !== 'en') {
-          const fallback = await fetch('data/quotes-en.json');
-          this.quotes = await fallback.json();
-        } else {
-          throw new Error('Failed to load quotes');
-        }
-      } else {
-        this.quotes = await response.json();
-      }
-      
+      // Shuffle quotes so sources are mixed
+      this.shuffleQuotes();
       this.currentIndex = 0;
+      
     } catch (error) {
       console.error('Failed to load quotes:', error);
-      // Use minimal fallback data
+      // Fallback error quote
       this.quotes = [{
         text: this.currentLang === 'pl' ? 'Błąd ładowania cytatów' : 'Error loading quotes',
         source: 'Error',
         chapter: ''
       }];
+    }
+  }
+
+  async loadSource(sourceId) {
+    try {
+      const fileName = `${sourceId}-${this.currentLang}.json`;
+      const response = await fetch(`data/${fileName}`);
+      
+      if (!response.ok) {
+        // If translation not available, try English fallback
+        if (this.currentLang !== 'en') {
+          const fallbackResponse = await fetch(`data/${sourceId}-en.json`);
+          if (!fallbackResponse.ok) throw new Error(`Failed to load ${sourceId}`);
+          const data = await fallbackResponse.json();
+          this.addQuotes(data, sourceId);
+        } else {
+          throw new Error(`Failed to load ${sourceId}`);
+        }
+      } else {
+        const data = await response.json();
+        this.addQuotes(data, sourceId);
+      }
+    } catch (error) {
+      console.warn(`Failed to load source ${sourceId}:`, error);
+    }
+  }
+
+  addQuotes(quotesArray, sourceId) {
+    // Add source ID to each quote for reference
+    const processed = quotesArray.map(q => ({
+      ...q,
+      sourceId: sourceId
+    }));
+    this.quotes.push(...processed);
+  }
+
+  shuffleQuotes() {
+    for (let i = this.quotes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.quotes[i], this.quotes[j]] = [this.quotes[j], this.quotes[i]];
     }
   }
 
@@ -147,7 +183,6 @@ class App {
     this.els.quoteSource.textContent = quote.source || '';
     this.els.quoteChapter.textContent = quote.chapter || '';
     
-    // Update page title
     document.title = `${quote.source} — Silent Words`;
   }
 
@@ -179,7 +214,7 @@ class App {
       await navigator.clipboard.writeText(text);
       this.showToast(i18n.t('copySuccess', 'Copied to clipboard'));
     } catch (err) {
-      // Fallback
+      // Fallback for older browsers
       const ta = document.createElement('textarea');
       ta.value = text;
       document.body.appendChild(ta);
