@@ -1,32 +1,6 @@
 {
-  "meta": {
-    "language": "Polski",
-    "code": "pl"
-  },
-  "ui": {
-    "title": "Silent Words",
-    "subtitle": "Cytaty Buddyjskie i Taoistyczne",
-    "loading": "Ładowanie baz danych...",
-    "copySuccess": "Skopiowano do schowka",
-    "shareSuccess": "Udostępniono pomyślnie",
-    "offlineReady": "Gotowe do użytku offline",
-    "errorLoading": "Błąd ładowania cytatów",
-    "refresh": "Odśwież",
-    "share": "Udostępnij",
-    "copy": "Kopiuj",
-    "next": "Następny",
-    "previous": "Poprzedni",
-    "random": "Losowy",
-    "themeToggle": "Przełącz tryb ciemny",
-    "languageToggle": "Zmień język",
-    "install": "Zainstaluj Aplikację",
-    "about": "O aplikacji",
-    "close": "Zamknij"
-  },
-  "quotes": {
-    "sourceDhammapada": "Dhammapada",
-    "sourceZen": "Koań Zen",
-    "sourceTao": "Tao Te Ching",
-    "sourceUnknown": "Nieznane Źródło"
-  }
+  "loading": "Ładowanie baz danych...",
+  "copySuccess": "Skopiowano do schowka",
+  "copy": "Kopiuj",
+  "share": "Udostępnij"
 }
