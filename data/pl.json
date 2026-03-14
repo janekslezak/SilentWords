@@ -4,19 +4,29 @@
     "code": "pl"
   },
   "ui": {
-    "title": "Silent Words - Słowa Ciszy",
+    "title": "Silent Words",
+    "subtitle": "Cytaty Buddyjskie i Taoistyczne",
     "loading": "Ładowanie baz danych...",
     "copySuccess": "Skopiowano do schowka",
+    "shareSuccess": "Udostępniono pomyślnie",
+    "offlineReady": "Gotowe do użytku offline",
+    "errorLoading": "Błąd ładowania cytatów",
+    "refresh": "Odśwież",
     "share": "Udostępnij",
     "copy": "Kopiuj",
-    "next": "Następny cytat",
-    "previous": "Poprzedni cytat",
+    "next": "Następny",
+    "previous": "Poprzedni",
+    "random": "Losowy",
     "themeToggle": "Przełącz tryb ciemny",
-    "languageToggle": "Zmień język"
+    "languageToggle": "Zmień język",
+    "install": "Zainstaluj Aplikację",
+    "about": "O aplikacji",
+    "close": "Zamknij"
   },
   "quotes": {
     "sourceDhammapada": "Dhammapada",
     "sourceZen": "Koań Zen",
-    "sourceTao": "Tao Te Ching"
+    "sourceTao": "Tao Te Ching",
+    "sourceUnknown": "Nieznane Źródło"
   }
 }
